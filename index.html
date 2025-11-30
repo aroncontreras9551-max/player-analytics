@@ -1607,6 +1607,111 @@
     };
 
     // =============================================
+    // TIME CONVERSION UTILITIES - FIXED FOR PAKISTAN TIME
+    // =============================================
+
+    function convertUTCToPKT(utcDateString) {
+        if (!utcDateString) return 'N/A';
+        
+        try {
+            // Create date object from UTC string
+            const date = new Date(utcDateString);
+            
+            // Check if date is valid
+            if (isNaN(date.getTime())) {
+                console.error('Invalid date:', utcDateString);
+                return 'Invalid Date';
+            }
+            
+            // Convert to Pakistan Time (UTC+5)
+            const pktOffset = 5 * 60 * 60 * 1000; // 5 hours in milliseconds
+            const pktDate = new Date(date.getTime() + pktOffset);
+            
+            // Format as: DD/MM/YYYY, HH:MM:SS (Pakistan format)
+            const day = String(pktDate.getUTCDate()).padStart(2, '0');
+            const month = String(pktDate.getUTCMonth() + 1).padStart(2, '0');
+            const year = pktDate.getUTCFullYear();
+            const hours = String(pktDate.getUTCHours()).padStart(2, '0');
+            const minutes = String(pktDate.getUTCMinutes()).padStart(2, '0');
+            const seconds = String(pktDate.getUTCSeconds()).padStart(2, '0');
+            
+            return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
+        } catch (error) {
+            console.error('Error converting date to PKT:', error, utcDateString);
+            return 'Date Error';
+        }
+    }
+
+    function convertUTCToPKTDateOnly(utcDateString) {
+        if (!utcDateString) return 'N/A';
+        
+        try {
+            const date = new Date(utcDateString);
+            if (isNaN(date.getTime())) {
+                return 'Invalid Date';
+            }
+            
+            const pktOffset = 5 * 60 * 60 * 1000;
+            const pktDate = new Date(date.getTime() + pktOffset);
+            
+            const day = String(pktDate.getUTCDate()).padStart(2, '0');
+            const month = String(pktDate.getUTCMonth() + 1).padStart(2, '0');
+            const year = pktDate.getUTCFullYear();
+            
+            return `${day}/${month}/${year}`;
+        } catch (error) {
+            console.error('Error converting date to PKT:', error);
+            return 'Date Error';
+        }
+    }
+
+    function formatTimeSince(lastDepositDate) {
+        if (!lastDepositDate) return 'N/A';
+        
+        try {
+            const now = new Date();
+            const lastDeposit = new Date(lastDepositDate);
+            
+            // Check if dates are valid
+            if (isNaN(now.getTime()) || isNaN(lastDeposit.getTime())) {
+                console.error('Invalid dates in formatTimeSince:', { now, lastDepositDate });
+                return 'N/A';
+            }
+            
+            // Convert both times to PKT for accurate comparison
+            const pktOffset = 5 * 60 * 60 * 1000;
+            const nowPKT = new Date(now.getTime() + pktOffset);
+            const lastDepositPKT = new Date(lastDeposit.getTime() + pktOffset);
+            
+            const diffMs = nowPKT - lastDepositPKT;
+            
+            // Handle negative time difference (future dates)
+            if (diffMs < 0) {
+                return 'Just now';
+            }
+            
+            const hoursSince = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutesSince = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            const daysSince = hoursSince / 24;
+            const remainingHours = hoursSince % 24;
+            
+            if (daysSince < 1) {
+                if (hoursSince === 0) {
+                    return `${minutesSince} minutes ago`;
+                } else {
+                    return `${hoursSince} hours ${minutesSince} minutes ago`;
+                }
+            } else {
+                const fullDays = Math.floor(daysSince);
+                return `${fullDays} day${fullDays > 1 ? 's' : ''} ${remainingHours} hours ago`;
+            }
+        } catch (error) {
+            console.error('Error calculating time since:', error, lastDepositDate);
+            return 'N/A';
+        }
+    }
+
+    // =============================================
     // STATE MANAGEMENT
     // =============================================
     let selectedPage = null;
@@ -1695,29 +1800,6 @@
         .join(' ')
         .replace(/\s+\+\s+/g, '+')
         .replace(/Egames/g, 'E-Games');
-    }
-
-    function formatTimeSince(lastDepositDate) {
-      if (!lastDepositDate) return 'N/A';
-      
-      const now = new Date();
-      const lastDeposit = new Date(lastDepositDate);
-      const diffMs = now - lastDeposit;
-      const hoursSince = Math.floor(diffMs / (1000 * 60 * 60));
-      const minutesSince = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      const daysSince = hoursSince / 24;
-      const remainingHours = hoursSince % 24;
-      
-      if (daysSince < 1) {
-        if (hoursSince === 0) {
-          return `${minutesSince} minutes ago`;
-        } else {
-          return `${hoursSince} hours ${minutesSince} minutes ago`;
-        }
-      } else {
-        const fullDays = Math.floor(daysSince);
-        return `${fullDays} day${fullDays > 1 ? 's' : ''} ${remainingHours} hours ago`;
-      }
     }
 
     function showNotification(message, type = 'success') {
@@ -1840,7 +1922,11 @@
         
         data.forEach(player => {
           const playerName = player.player_name;
-          const lastDeposit = player.last_deposit_date ? new Date(player.last_deposit_date).toLocaleString() : "";
+          
+          // FIXED: Use PKT conversion for display
+          const lastDepositPKT = player.last_deposit_date ? 
+            convertUTCToPKT(player.last_deposit_date) : "N/A";
+          
           const daysSince = player.days_since_last_deposit || 0;
           const status = player.status || "Inactive";
           
@@ -1848,14 +1934,15 @@
           
           const playerData = {
             player: playerName,
-            lastDeposit,
+            lastDeposit: lastDepositPKT, // Use PKT time here
             daysSince,
             status,
             totalDeposit: playerDeposits.total,
             last7DaysDeposit: playerDeposits.last7Days,
             activityNotes: player.activity_notes || "",
             hasNotes: playersWithNotes[playerName] || false,
-            timestamp: player.last_deposit_date ? new Date(player.last_deposit_date).getTime() : 0
+            timestamp: player.last_deposit_date ? new Date(player.last_deposit_date).getTime() : 0,
+            originalTimestamp: player.last_deposit_date // Keep original for calculations
           };
           
           resultPlayers.push(playerData);
@@ -2249,11 +2336,18 @@
           };
         }
 
-        const playerDeposits = data.map(deposit => ({
-          date: new Date(deposit.deposit_date),
-          timestamp: new Date(deposit.deposit_date).toLocaleString(),
-          amount: parseFloat(deposit.amount) || 0
-        }));
+        const playerDeposits = data.map(deposit => {
+          // FIXED: Use PKT conversion for display
+          const originalDate = new Date(deposit.deposit_date);
+          const pktDate = convertUTCToPKT(deposit.deposit_date);
+          
+          return {
+            date: originalDate, // Use original for calculations
+            timestamp: pktDate, // Use PKT for display
+            amount: parseFloat(deposit.amount) || 0,
+            originalDate: deposit.deposit_date // Keep original
+          };
+        });
 
         playerDeposits.sort((a, b) => a.date - b.date);
         
@@ -2289,7 +2383,7 @@
               count: 0,
               totalAmount: 0,
               date: deposit.date,
-              displayDate: deposit.date.toLocaleDateString()
+              displayDate: convertUTCToPKTDateOnly(deposit.originalDate) // Use PKT for display
             };
           }
           depositsByDay[dateKey].count++;
@@ -2331,7 +2425,7 @@
             isDepositDay: !!dayData,
             depositCount: dayData ? dayData.count : 0,
             totalAmount: dayData ? dayData.totalAmount : 0,
-            displayDate: currentDate.toLocaleDateString()
+            displayDate: convertUTCToPKTDateOnly(currentDate.toISOString()) // Use PKT for display
           });
           
           currentDate.setDate(currentDate.getDate() + 1);
@@ -2352,7 +2446,7 @@
               : "";
             
             enhancedHistory.push({
-              dateRange: currentDay.date.toISOString().split('T')[0],
+              dateRange: currentDay.displayDate, // Use PKT date
               activity: `${depositText}${amountText}`,
               status: "Active",
               inactiveGap: 0,
@@ -2372,7 +2466,7 @@
             
             if (inactiveCount === 1) {
               enhancedHistory.push({
-                dateRange: timeline[inactiveStart].displayDate,
+                dateRange: timeline[inactiveStart].displayDate, // Use PKT date
                 activity: "No deposits",
                 status: "Inactive",
                 inactiveGap: inactiveCount,
@@ -2450,18 +2544,19 @@
           const amount = parseFloat(deposit.amount) || 0;
           
           if (amount > 0) {
-            const dateKey = d.toISOString().split('T')[0];
-            const monthKey = d.toISOString().substring(0, 7);
-            const displayDate = d.toLocaleDateString();
+            // FIXED: Use PKT date for grouping and display
+            const pktDate = new Date(d.getTime() + (5 * 60 * 60 * 1000));
+            const dateKey = pktDate.toISOString().split('T')[0];
+            const displayDate = convertUTCToPKTDateOnly(deposit.deposit_date); // Use PKT format
             
             if (!allDailyDeposits[dateKey]) {
               allDailyDeposits[dateKey] = {
                 date: dateKey,
                 displayDate: displayDate,
-                monthKey: monthKey,
+                monthKey: pktDate.toISOString().substring(0, 7),
                 totalAmount: 0,
                 transactionCount: 0,
-                timestamp: d.getTime()
+                timestamp: pktDate.getTime()
               };
             }
             
@@ -2517,7 +2612,7 @@
         
         while (currentDate <= actualEndDate) {
           const dateKey = currentDate.toISOString().split('T')[0];
-          const displayDate = currentDate.toLocaleDateString();
+          const displayDate = convertUTCToPKTDateOnly(currentDate.toISOString()); // Use PKT format
           
           if (!currentMonthDeposits[dateKey]) {
             currentMonthDeposits[dateKey] = {
@@ -3312,7 +3407,9 @@
       
       paginatedPlayers.forEach((p, index) => {
         const cls = p.status === "Active" ? "status-active" : "status-inactive";
-        const gapDisplay = formatTimeSince(p.lastDeposit);
+        
+        // FIXED: Use the PKT-formatted lastDeposit and calculate time since properly
+        const gapDisplay = formatTimeSince(p.originalTimestamp || p.lastDeposit);
         const gapDays = p.gapDays ? p.gapDays : 'N/A';
         
         const notesBtnClass = p.hasNotes ? 'notes-btn has-notes' : 'notes-btn';
@@ -3325,7 +3422,7 @@
           <tr>
             <td style="text-align: center;">${serialNumber}</td>
             <td>${p.player}</td>
-            <td>${p.lastDeposit || ''}</td>
+            <td>${p.lastDeposit}</td>
             <td>${gapDisplay}</td>
             <td><span class="status-badge ${cls}">${p.status}</span></td>
             <td style="text-align: center;">${p.totalDeposit || 0}</td>
@@ -3386,6 +3483,9 @@
       
       paginatedPlayers.forEach((p, index) => {
         const statusClass = p.currentStatus === "Active" ? "status-active" : "status-inactive";
+        
+        // FIXED: Use PKT conversion for last deposit display
+        const lastDepositPKT = convertUTCToPKTDateOnly(p.lastDeposit);
         const gapDisplay = formatTimeSince(p.lastDeposit);
         
         let gapDetails = '';
@@ -3420,7 +3520,7 @@
                 ${gapDetails}
               </div>
             </td>
-            <td>${p.lastDeposit.split(' ')[0]}</td>
+            <td>${lastDepositPKT}</td>
             <td>${gapDisplay}</td>
             <td><span class="status-badge ${statusClass}">${p.currentStatus}</span></td>
             <td style="text-align: center;">${p.totalDeposits}</td>
@@ -3874,7 +3974,7 @@
           let notesHtml = '';
           result.notes.forEach(note => {
             const date = new Date(note.timestamp);
-            const formattedDate = date.toLocaleString();
+            const formattedDate = convertUTCToPKT(note.timestamp); // Use PKT for note timestamps
             
             notesHtml += `
               <div class="note-item">
