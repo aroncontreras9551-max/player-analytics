@@ -1609,27 +1609,24 @@
     };
 
     // =============================================
-    // TIME CONVERSION UTILITIES - FIXED FOR PAKISTAN TIME WITH AM/PM
+    // TIME CONVERSION UTILITIES - FIXED FOR PAKISTAN TIME
     // =============================================
 
+    // Convert UTC to Pakistan Time (UTC+5) for display only
     function convertUTCToPKT(utcDateString) {
         if (!utcDateString) return 'N/A';
         
         try {
-            // Create date object from UTC string
             const date = new Date(utcDateString);
-            
-            // Check if date is valid
             if (isNaN(date.getTime())) {
                 console.error('Invalid date:', utcDateString);
                 return 'Invalid Date';
             }
             
             // Convert to Pakistan Time (UTC+5)
-            const pktOffset = 5 * 60 * 60 * 1000; // 5 hours in milliseconds
+            const pktOffset = 5 * 60 * 60 * 1000;
             const pktDate = new Date(date.getTime() + pktOffset);
             
-            // Format as: DD/MM/YYYY, HH:MM:SS AM/PM (Pakistan format with AM/PM)
             const day = String(pktDate.getUTCDate()).padStart(2, '0');
             const month = String(pktDate.getUTCMonth() + 1).padStart(2, '0');
             const year = pktDate.getUTCFullYear();
@@ -1638,10 +1635,9 @@
             const minutes = String(pktDate.getUTCMinutes()).padStart(2, '0');
             const seconds = String(pktDate.getUTCSeconds()).padStart(2, '0');
             
-            // Convert to 12-hour format with AM/PM
             const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12;
-            hours = hours ? hours : 12; // the hour '0' should be '12'
+            hours = hours ? hours : 12;
             const hours12 = String(hours).padStart(2, '0');
             
             return `${day}/${month}/${year}, ${hours12}:${minutes}:${seconds} ${ampm}`;
@@ -1651,6 +1647,7 @@
         }
     }
 
+    // Convert UTC to Pakistan Time date only (DD/MM/YYYY)
     function convertUTCToPKTDateOnly(utcDateString) {
         if (!utcDateString) return 'N/A';
         
@@ -1674,63 +1671,44 @@
         }
     }
 
-    // NEW: Convert UTC date to PKT Date object for calculations
-    function convertUTCToPKTDate(utcDateString) {
-        if (!utcDateString) return null;
-        
-        try {
-            const date = new Date(utcDateString);
-            if (isNaN(date.getTime())) {
-                return null;
-            }
-            
-            const pktOffset = 5 * 60 * 60 * 1000;
-            return new Date(date.getTime() + pktOffset);
-        } catch (error) {
-            console.error('Error converting date to PKT Date:', error);
-            return null;
-        }
-    }
-
-    // NEW: Get current time in PKT
+    // Get current time in Pakistan Time
     function getCurrentPKT() {
         const now = new Date();
         const pktOffset = 5 * 60 * 60 * 1000;
         return new Date(now.getTime() + pktOffset);
     }
 
-    // NEW: Format date as YYYY-MM-DD for grouping (PKT time)
+    // Format date as YYYY-MM-DD for grouping (using PKT timezone)
     function formatDateForGrouping(pktDate) {
         if (!pktDate) return '';
-        return pktDate.toISOString().split('T')[0];
+        const year = pktDate.getUTCFullYear();
+        const month = String(pktDate.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(pktDate.getUTCDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
-    // NEW: Get start of day in PKT (00:00:00)
+    // Get start of day in PKT (00:00:00)
     function getStartOfDayPKT(date) {
         const pktDate = new Date(date);
         pktDate.setUTCHours(0, 0, 0, 0);
         return pktDate;
     }
 
+    // Calculate time since last deposit in PKT
     function formatTimeSince(utcDateString) {
         if (!utcDateString) return 'N/A';
         
         try {
-            // Get current time in Pakistan Time
             const nowPKT = getCurrentPKT();
+            const lastDepositUTC = new Date(utcDateString);
+            const lastDepositPKT = new Date(lastDepositUTC.getTime() + (5 * 60 * 60 * 1000));
             
-            // Convert the provided UTC timestamp to Pakistan Time for calculation
-            const lastDepositPKT = convertUTCToPKTDate(utcDateString);
-            
-            // Check if dates are valid
-            if (isNaN(nowPKT.getTime()) || !lastDepositPKT || isNaN(lastDepositPKT.getTime())) {
-                console.error('Invalid dates in formatTimeSince:', { nowPKT, lastDepositPKT, utcDateString });
+            if (isNaN(nowPKT.getTime()) || isNaN(lastDepositPKT.getTime())) {
                 return 'N/A';
             }
             
             const diffMs = nowPKT - lastDepositPKT;
             
-            // Handle negative time difference (future dates)
             if (diffMs < 0) {
                 return 'Just now';
             }
@@ -1988,14 +1966,13 @@
         
         statusData.forEach(player => {
           const playerName = player.player_name;
-          // FIXED: Use PKT for all calculations
           const originalTimestamp = player.last_deposit_date;
-          const pktTimestamp = convertUTCToPKTDate(originalTimestamp);
           const lastDepositDisplay = convertUTCToPKT(originalTimestamp);
           
-          // Calculate days since using PKT time
-          const nowPKT = getCurrentPKT();
-          const daysSince = pktTimestamp ? Math.floor((nowPKT - pktTimestamp) / (1000 * 60 * 60 * 24)) : 999;
+          // Calculate days since using UTC dates for consistency
+          const nowUTC = new Date();
+          const lastDepositUTC = new Date(originalTimestamp);
+          const daysSince = Math.floor((nowUTC - lastDepositUTC) / (1000 * 60 * 60 * 24));
           
           const status = player.status || "Inactive";
           
@@ -2010,9 +1987,8 @@
           
           const playerData = {
             player: playerName,
-            lastDeposit: lastDepositDisplay, // Display in PKT
-            originalTimestamp: originalTimestamp, // Keep UTC for reference
-            pktTimestamp: pktTimestamp, // Use PKT for calculations
+            lastDeposit: lastDepositDisplay,
+            originalTimestamp: originalTimestamp,
             daysSince: daysSince,
             status: status,
             totalDeposit: playerDeposits.total,
@@ -2041,15 +2017,11 @@
           player.hasNotes = playersWithNotes[player.player] || false;
         });
 
-        // Sort using PKT timestamps
-        resultPlayers.sort((a, b) => (b.pktTimestamp || 0) - (a.pktTimestamp || 0));
-        recentActivePlayers.sort((a, b) => (b.pktTimestamp || 0) - (a.pktTimestamp || 0));
-        recentInactivePlayers.sort((a, b) => (b.pktTimestamp || 0) - (a.pktTimestamp || 0));
-        highRiskPlayers.sort((a, b) => {
-          const timeA = a.pktTimestamp ? a.pktTimestamp.getTime() : 0;
-          const timeB = b.pktTimestamp ? b.pktTimestamp.getTime() : 0;
-          return timeB - timeA;
-        });
+        // Sort by original timestamp
+        resultPlayers.sort((a, b) => new Date(b.originalTimestamp) - new Date(a.originalTimestamp));
+        recentActivePlayers.sort((a, b) => new Date(b.originalTimestamp) - new Date(a.originalTimestamp));
+        recentInactivePlayers.sort((a, b) => new Date(b.originalTimestamp) - new Date(a.originalTimestamp));
+        highRiskPlayers.sort((a, b) => new Date(b.lastDeposit) - new Date(a.lastDeposit));
 
         const counts = {
           Total: resultPlayers.length,
@@ -2096,22 +2068,22 @@
         if (error) throw error;
         
         const depositData = {};
-        const todayPKT = getCurrentPKT();
-        const sevenDaysAgo = new Date(todayPKT.getTime() - (7 * 24 * 60 * 60 * 1000));
+        const todayUTC = new Date();
+        const sevenDaysAgo = new Date(todayUTC.getTime() - (7 * 24 * 60 * 60 * 1000));
         
         data.forEach(deposit => {
           const playerName = deposit.player_name;
           const amount = parseFloat(deposit.amount) || 0;
-          const depositDatePKT = convertUTCToPKTDate(deposit.deposit_date);
+          const depositDateUTC = new Date(deposit.deposit_date);
           
           if (!depositData[playerName]) {
             depositData[playerName] = { total: 0, last7Days: 0, deposits: [] };
           }
           
           depositData[playerName].total += amount;
-          depositData[playerName].deposits.push(depositDatePKT);
+          depositData[playerName].deposits.push(depositDateUTC);
           
-          if (depositDatePKT >= sevenDaysAgo) {
+          if (depositDateUTC >= sevenDaysAgo) {
             depositData[playerName].last7Days += amount;
           }
         });
@@ -2137,8 +2109,8 @@
       const gapHours = Math.floor((latest - secondLatest) / (1000 * 60 * 60));
       const gapDays = gapHours / 24;
       
-      const todayPKT = getCurrentPKT();
-      const hoursSinceLatest = Math.floor((todayPKT - latest) / (1000 * 60 * 60));
+      const todayUTC = new Date();
+      const hoursSinceLatest = Math.floor((todayUTC - latest) / (1000 * 60 * 60));
       const daysSinceLatest = hoursSinceLatest / 24;
       
       const isRecentActive = gapDays >= 3 && daysSinceLatest <= DAYS_ACTIVE;
@@ -2226,7 +2198,9 @@
       const depositsByDay = {};
       
       deposits.forEach(deposit => {
-        const dateKey = formatDateForGrouping(deposit);
+        // Convert UTC to PKT for grouping
+        const pktDate = new Date(deposit.getTime() + (5 * 60 * 60 * 1000));
+        const dateKey = formatDateForGrouping(pktDate);
         
         if (!depositsByDay[dateKey]) {
           depositsByDay[dateKey] = {
@@ -2240,14 +2214,7 @@
         }
       });
       
-      // Return unique days sorted
-      const uniqueDays = Object.values(depositsByDay).map(day => {
-        // Return the latest deposit time for that day
-        const latestDeposit = day.deposits.sort((a, b) => b - a)[0];
-        return latestDeposit;
-      });
-      
-      return uniqueDays.sort((a, b) => a - b);
+      return depositsByDay;
     }
 
     function calculateRiskLevel(totalGaps, maxGapDays) {
@@ -2279,18 +2246,18 @@
         if (error) throw error;
         
         const playerDeposits = {};
-        const todayPKT = getCurrentPKT();
-        const fifteenDaysAgo = new Date(todayPKT.getTime() - (HIGH_RISK_MAX_DAYS * 24 * 60 * 60 * 1000));
+        const todayUTC = new Date();
+        const fifteenDaysAgo = new Date(todayUTC.getTime() - (HIGH_RISK_MAX_DAYS * 24 * 60 * 60 * 1000));
         
         data.forEach(deposit => {
           const playerName = deposit.player_name;
-          const depositDatePKT = convertUTCToPKTDate(deposit.deposit_date);
+          const depositDateUTC = new Date(deposit.deposit_date);
           
-          if (!isNaN(depositDatePKT?.getTime()) && depositDatePKT >= fifteenDaysAgo) {
+          if (!isNaN(depositDateUTC?.getTime()) && depositDateUTC >= fifteenDaysAgo) {
             if (!playerDeposits[playerName]) {
               playerDeposits[playerName] = [];
             }
-            playerDeposits[playerName].push(depositDatePKT);
+            playerDeposits[playerName].push(depositDateUTC);
           }
         });
 
@@ -2302,12 +2269,21 @@
         const MIN_GAP_DAYS = 5;
 
         Object.keys(playerDeposits).forEach(player => {
-          const deposits = playerDeposits[player];
-          deposits.sort((a, b) => a - b);
+          const depositsByDay = playerDeposits[player];
+          const depositDates = Object.keys(depositsByDay).sort();
+          
+          if (depositDates.length === 0) return;
+
+          const deposits = depositDates.map(date => {
+            const dayData = depositsByDay[date];
+            // Use the latest deposit time for that day
+            const latestDeposit = dayData.deposits.sort((a, b) => b - a)[0];
+            return latestDeposit;
+          }).sort((a, b) => a - b);
           
           if (deposits.length === 1) {
             const singleDepositDate = deposits[0];
-            const hoursSinceSingleDeposit = Math.floor((todayPKT - singleDepositDate) / (1000 * 60 * 60));
+            const hoursSinceSingleDeposit = Math.floor((todayUTC - singleDepositDate) / (1000 * 60 * 60));
             const daysSinceSingleDeposit = hoursSinceSingleDeposit / 24;
             
             if (daysSinceSingleDeposit >= MIN_GAP_DAYS && daysSinceSingleDeposit < HIGH_RISK_MAX_DAYS) {
@@ -2322,13 +2298,11 @@
                 totalQualifyingGaps: 1,
                 maxGapDays: Math.floor(daysSinceSingleDeposit),
                 lastDeposit: singleDepositDate.toISOString(),
-                pktTimestamp: singleDepositDate,
                 daysSinceLastDeposit: Math.floor(daysSinceSingleDeposit),
                 currentStatus: currentStatus,
-                totalDeposits: deposits.length,
+                totalDeposits: depositsByDay[depositDates[0]].count,
                 riskLevel: calculateRiskLevel(1, Math.floor(daysSinceSingleDeposit)),
-                depositType: "single",
-                timestamp: singleDepositDate.getTime()
+                depositType: "single"
               });
             }
             return;
@@ -2353,7 +2327,7 @@
           }
           
           const lastDepositDate = deposits[deposits.length - 1];
-          const hoursSinceLastDeposit = Math.floor((todayPKT - lastDepositDate) / (1000 * 60 * 60));
+          const hoursSinceLastDeposit = Math.floor((todayUTC - lastDepositDate) / (1000 * 60 * 60));
           const daysSinceLastDeposit = hoursSinceLastDeposit / 24;
           
           if (daysSinceLastDeposit >= MIN_GAP_DAYS && daysSinceLastDeposit < HIGH_RISK_MAX_DAYS) {
@@ -2371,6 +2345,7 @@
           
           if (qualifyingGaps.length > 0) {
             const currentStatus = daysSinceLastDeposit <= DAYS_ACTIVE ? "Active" : "Inactive";
+            const totalDepositCount = depositDates.reduce((sum, date) => sum + depositsByDay[date].count, 0);
             
             highRiskPlayers.push({
               player: player,
@@ -2378,18 +2353,16 @@
               totalQualifyingGaps: qualifyingGaps.length,
               maxGapDays: Math.max(...qualifyingGaps.map(gap => gap.gapDays)),
               lastDeposit: lastDepositDate.toISOString(),
-              pktTimestamp: lastDepositDate,
               daysSinceLastDeposit: Math.floor(daysSinceLastDeposit),
               currentStatus: currentStatus,
-              totalDeposits: deposits.length,
+              totalDeposits: totalDepositCount,
               riskLevel: calculateRiskLevel(qualifyingGaps.length, Math.max(...qualifyingGaps.map(gap => gap.gapDays))),
-              depositType: "multiple",
-              timestamp: lastDepositDate.getTime()
+              depositType: "multiple"
             });
           }
         });
 
-        highRiskPlayers.sort((a, b) => b.timestamp - a.timestamp);
+        highRiskPlayers.sort((a, b) => new Date(b.lastDeposit) - new Date(a.lastDeposit));
 
         return {
           highRiskPlayers: highRiskPlayers,
@@ -2401,7 +2374,7 @@
       }
     }
 
-    // FIXED: Enhanced Player History Function with proper PKT timezone handling
+    // FIXED: Enhanced Player History Function with proper timezone handling
     async function getEnhancedPlayerHistory(playerName, pageName) {
       try {
         const { data, error } = await supabase
@@ -2424,26 +2397,28 @@
           };
         }
 
-        // Convert all deposits to PKT and process
+        // Process deposits with UTC dates
         const playerDeposits = data.map(deposit => {
-          const pktDate = convertUTCToPKTDate(deposit.deposit_date);
+          const utcDate = new Date(deposit.deposit_date);
           const displayDate = convertUTCToPKT(deposit.deposit_date);
+          const displayDateOnly = convertUTCToPKTDateOnly(deposit.deposit_date);
           
           return {
-            pktDate: pktDate, // Use PKT date for ALL calculations
-            timestamp: displayDate, // Use PKT for display
+            utcDate: utcDate,
+            timestamp: displayDate,
+            displayDateOnly: displayDateOnly,
             amount: parseFloat(deposit.amount) || 0,
-            originalDate: deposit.deposit_date // Keep original UTC
+            originalDate: deposit.deposit_date
           };
-        }).filter(deposit => deposit.pktDate !== null);
+        }).filter(deposit => !isNaN(deposit.utcDate.getTime()));
 
-        playerDeposits.sort((a, b) => a.pktDate - b.pktDate);
+        playerDeposits.sort((a, b) => a.utcDate - b.utcDate);
         
-        // Get current time in Pakistan Time
-        const nowPKT = getCurrentPKT();
+        // Get current time in UTC for calculations
+        const nowUTC = new Date();
         const mostRecentDeposit = playerDeposits[playerDeposits.length - 1];
         
-        const timeSinceMs = nowPKT - mostRecentDeposit.pktDate;
+        const timeSinceMs = nowUTC - mostRecentDeposit.utcDate;
         const hoursSince = Math.floor(timeSinceMs / (1000 * 60 * 60));
         const minutesSince = Math.floor((timeSinceMs % (1000 * 60 * 60)) / (1000 * 60));
         const daysSince = hoursSince / 24;
@@ -2463,19 +2438,16 @@
           timeSinceDisplay = `${fullDays} day${fullDays > 1 ? 's' : ''} ${remainingHours} hours ago`;
         }
 
-        // Group deposits by PKT date - FIXED: Proper aggregation without duplicates
+        // Group deposits by PKT date for display
         const depositsByDay = {};
         playerDeposits.forEach(deposit => {
-          // Use PKT date for grouping
-          const dateKey = formatDateForGrouping(deposit.pktDate);
-          const displayDate = convertUTCToPKTDateOnly(deposit.originalDate);
+          const dateKey = deposit.displayDateOnly;
           
           if (!depositsByDay[dateKey]) {
             depositsByDay[dateKey] = {
               count: 0,
               totalAmount: 0,
-              pktDate: deposit.pktDate,
-              displayDate: displayDate,
+              displayDate: dateKey,
               deposits: []
             };
           }
@@ -2498,20 +2470,17 @@
           };
         }
 
-        // Create a timeline from first deposit to today in PKT
-        const firstDate = getStartOfDayPKT(depositsByDay[depositDates[0]].pktDate);
-        const lastDate = getStartOfDayPKT(depositsByDay[depositDates[depositDates.length - 1]].pktDate);
-        
-        let currentDate = new Date(firstDate);
-        const todayStart = getStartOfDayPKT(nowPKT);
+        // Create timeline from first to last deposit in PKT dates
+        let currentDate = new Date(depositDates[0].split('/').reverse().join('-'));
+        const lastDate = new Date(depositDates[depositDates.length - 1].split('/').reverse().join('-'));
+        const today = new Date();
         
         const timeline = [];
         
-        // Create timeline entries for each day from first deposit to today in PKT
-        while (currentDate <= todayStart) {
-          const dateKey = formatDateForGrouping(currentDate);
+        // Create timeline entries for each day from first deposit to today
+        while (currentDate <= today) {
+          const dateKey = convertUTCToPKTDateOnly(currentDate.toISOString());
           const dayData = depositsByDay[dateKey];
-          const displayDate = convertUTCToPKTDateOnly(currentDate.toISOString());
           
           timeline.push({
             date: new Date(currentDate),
@@ -2519,7 +2488,7 @@
             isDepositDay: !!dayData,
             depositCount: dayData ? dayData.count : 0,
             totalAmount: dayData ? dayData.totalAmount : 0,
-            displayDate: displayDate,
+            displayDate: dateKey,
             deposits: dayData ? dayData.deposits : []
           });
           
@@ -2617,7 +2586,7 @@
       }
     }
 
-    // FIXED: Page Daily Deposits function - completely rewritten to fix duplicate dates and cross-month issues
+    // FIXED: Page Daily Deposits function - completely rewritten to fix duplicate dates and timezone issues
     async function getPageDailyDeposits(pageName, monthOffset = 0) {
       try {
         const { data, error } = await supabase
@@ -2640,38 +2609,58 @@
           };
         }
         
-        // FIXED: Properly aggregate deposits by date without duplicates
-        const allDailyDeposits = {};
-        
-        data.forEach(deposit => {
-          const amount = parseFloat(deposit.amount) || 0;
+        // FIXED: Process all deposits and convert to PKT for grouping
+        const allDeposits = data.map(deposit => {
+          const utcDate = new Date(deposit.deposit_date);
+          // Convert to PKT for display and grouping
+          const pktDate = new Date(utcDate.getTime() + (5 * 60 * 60 * 1000));
+          const dateKey = formatDateForGrouping(pktDate);
+          const displayDate = convertUTCToPKTDateOnly(deposit.deposit_date);
+          const monthKey = pktDate.toISOString().substring(0, 7); // YYYY-MM format in PKT
           
-          if (amount > 0) {
-            // Use PKT date for grouping and display
-            const pktDate = convertUTCToPKTDate(deposit.deposit_date);
-            const dateKey = formatDateForGrouping(pktDate);
-            const displayDate = convertUTCToPKTDateOnly(deposit.deposit_date);
-            const monthKey = pktDate.toISOString().substring(0, 7); // YYYY-MM format
-            
-            if (!allDailyDeposits[dateKey]) {
-              allDailyDeposits[dateKey] = {
-                date: dateKey,
-                displayDate: displayDate,
-                monthKey: monthKey,
-                totalAmount: 0,
-                transactionCount: 0,
-                timestamp: pktDate.getTime()
-              };
-            }
-            
-            allDailyDeposits[dateKey].totalAmount += amount;
-            allDailyDeposits[dateKey].transactionCount++;
+          return {
+            utcDate: utcDate,
+            pktDate: pktDate,
+            dateKey: dateKey,
+            displayDate: displayDate,
+            monthKey: monthKey,
+            amount: parseFloat(deposit.amount) || 0,
+            player_name: deposit.player_name
+          };
+        }).filter(deposit => deposit.amount > 0);
+
+        if (allDeposits.length === 0) {
+          return {
+            success: false,
+            message: "No deposit data with positive amounts",
+            dailyDeposits: [],
+            totalAmount: 0,
+            totalTransactions: 0,
+            monthlyComparison: null,
+            availableMonths: []
+          };
+        }
+
+        // Group by PKT date
+        const depositsByDay = {};
+        allDeposits.forEach(deposit => {
+          if (!depositsByDay[deposit.dateKey]) {
+            depositsByDay[deposit.dateKey] = {
+              date: deposit.dateKey,
+              displayDate: deposit.displayDate,
+              monthKey: deposit.monthKey,
+              totalAmount: 0,
+              transactionCount: 0,
+              timestamp: deposit.pktDate.getTime()
+            };
           }
+          depositsByDay[deposit.dateKey].totalAmount += deposit.amount;
+          depositsByDay[deposit.dateKey].transactionCount++;
         });
-        
-        // Get unique months from the actual deposit data
+
+        // Get unique months from actual deposit data in PKT
         const allMonths = new Set();
-        Object.values(allDailyDeposits).forEach(day => {
+        Object.values(depositsByDay).forEach(day => {
           allMonths.add(day.monthKey);
         });
         
@@ -2698,22 +2687,14 @@
         const currentMonth = sortedMonths[currentMonthIndex];
         const previousMonth = currentMonthIndex + 1 < sortedMonths.length ? sortedMonths[currentMonthIndex + 1] : null;
         
-        // FIXED: Only include dates from the current month, no cross-month contamination
-        const currentMonthDeposits = {};
+        // Get actual deposit days for the current month
+        const currentMonthDeposits = Object.values(depositsByDay).filter(day => day.monthKey === currentMonth);
         
-        // First, add actual deposit days for the current month
-        Object.keys(allDailyDeposits).forEach(dateKey => {
-          const day = allDailyDeposits[dateKey];
-          if (day.monthKey === currentMonth) {
-            currentMonthDeposits[dateKey] = day;
-          }
-        });
-        
-        // FIXED: Generate date range only for the specific month being viewed
+        // Generate date range for the current month in PKT
         const currentMonthStart = new Date(currentMonth + '-01');
         const currentMonthEnd = new Date(currentMonthStart.getFullYear(), currentMonthStart.getMonth() + 1, 0);
         
-        // Use current Pakistan time
+        // Use current PKT time
         const nowPKT = getCurrentPKT();
         const today = getStartOfDayPKT(nowPKT);
         
@@ -2722,31 +2703,44 @@
           ? today 
           : getStartOfDayPKT(currentMonthEnd);
         
-        let currentDate = new Date(currentMonthStart);
-        currentDate.setHours(0, 0, 0, 0);
+        // Create a map of all days in the month with deposits
+        const dailyDataMap = {};
+        currentMonthDeposits.forEach(day => {
+          dailyDataMap[day.date] = day;
+        });
         
-        // FIXED: Generate dates only for the current month, no cross-month
+        // Generate complete date range for the month
+        const currentDate = new Date(currentMonthStart);
+        currentDate.setUTCHours(0, 0, 0, 0);
+        
+        const dailyDepositsArray = [];
+        
         while (currentDate <= actualEndDate && currentDate.getMonth() === currentMonthStart.getMonth()) {
           const dateKey = formatDateForGrouping(currentDate);
           const displayDate = convertUTCToPKTDateOnly(currentDate.toISOString());
           
-          if (!currentMonthDeposits[dateKey]) {
-            currentMonthDeposits[dateKey] = {
+          if (dailyDataMap[dateKey]) {
+            // Day with deposits
+            dailyDepositsArray.push(dailyDataMap[dateKey]);
+          } else {
+            // Day without deposits
+            dailyDepositsArray.push({
               date: dateKey,
               displayDate: displayDate,
               monthKey: currentMonth,
               totalAmount: 0,
               transactionCount: 0,
               timestamp: currentDate.getTime()
-            };
+            });
           }
           
           currentDate.setDate(currentDate.getDate() + 1);
         }
         
-        const dailyDepositsArray = Object.values(currentMonthDeposits)
-          .sort((a, b) => b.timestamp - a.timestamp);
+        // Sort by date descending (newest first)
+        dailyDepositsArray.sort((a, b) => b.timestamp - a.timestamp);
         
+        // Calculate trends
         const dailyDepositsWithTrends = dailyDepositsArray.map((day, index) => {
           let trend = null;
           
@@ -2777,9 +2771,9 @@
           };
         });
         
-        const currentMonthTotal = dailyDepositsArray.reduce((sum, day) => sum + day.totalAmount, 0);
-        const currentMonthTransactions = dailyDepositsArray.reduce((sum, day) => sum + day.transactionCount, 0);
-        const totalDaysInPeriod = dailyDepositsArray.length;
+        const currentMonthTotal = dailyDepositsWithTrends.reduce((sum, day) => sum + day.totalAmount, 0);
+        const currentMonthTransactions = dailyDepositsWithTrends.reduce((sum, day) => sum + day.transactionCount, 0);
+        const totalDaysInPeriod = dailyDepositsWithTrends.length;
         const dailyAverage = totalDaysInPeriod > 0 ? currentMonthTotal / totalDaysInPeriod : 0;
         
         let previousMonthTotal = 0;
@@ -2787,8 +2781,8 @@
         let monthlyComparison = null;
         
         if (previousMonth) {
-          // FIXED: Calculate previous month total only from actual deposits in that month
-          Object.values(allDailyDeposits).forEach(day => {
+          // Calculate previous month total from actual deposits in that month
+          Object.values(depositsByDay).forEach(day => {
             if (day.monthKey === previousMonth) {
               previousMonthTotal += day.totalAmount;
               previousMonthTransactions += day.transactionCount;
@@ -3525,7 +3519,6 @@
       paginatedPlayers.forEach((p, index) => {
         const cls = p.status === "Active" ? "status-active" : "status-inactive";
         
-        // Use PKT timestamp for time since calculation
         const gapDisplay = formatTimeSince(p.originalTimestamp);
         const gapDays = p.gapDays ? p.gapDays : 'N/A';
         
@@ -3601,7 +3594,6 @@
       paginatedPlayers.forEach((p, index) => {
         const statusClass = p.currentStatus === "Active" ? "status-active" : "status-inactive";
         
-        // Use PKT conversion for last deposit display
         const lastDepositPKT = convertUTCToPKT(p.lastDeposit);
         const gapDisplay = formatTimeSince(p.lastDeposit);
         
@@ -3898,7 +3890,7 @@
       }
     }
 
-    // FIXED: Enhanced Player History Rendering Function with proper PKT timezone handling
+    // FIXED: Enhanced Player History Rendering Function with proper timezone handling
     function renderEnhancedPlayerHistory(data, playerName, pageName, isGlobal = false) {
       const container = isGlobal ? 
         document.getElementById('globalPlayerHistoryContainer') : 
@@ -4091,8 +4083,7 @@
         if (result.success && result.notes.length > 0) {
           let notesHtml = '';
           result.notes.forEach(note => {
-            const date = new Date(note.timestamp);
-            const formattedDate = convertUTCToPKT(note.timestamp); // Use PKT for note timestamps
+            const formattedDate = convertUTCToPKT(note.timestamp);
             
             notesHtml += `
               <div class="note-item">
