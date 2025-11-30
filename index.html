@@ -3754,149 +3754,153 @@ async function getPageDailyDeposits(pageName, monthOffset = 0) {
     }
 
     function renderPageDeposits(data) {
-      if (!data.success || !data.dailyDeposits || data.dailyDeposits.length === 0) {
-        pageDepositsView.innerHTML = `
-          <div class="page-deposits-view">
-            <div class="deposits-header">
-              <h2 class="deposits-title">Daily Deposits - ${selectedPage}</h2>
-              <button class="close-deposits-btn" onclick="closePageDeposits()" title="Close">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-              <p>${data.message || "No daily deposit data available."}</p>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      const totalDaysInPeriod = data.dailyDeposits.length;
-      const dailyAverage = totalDaysInPeriod > 0 ? data.totalAmount / totalDaysInPeriod : 0;
-
-      let html = `
-        <div class="page-deposits-view">
-          <div class="deposits-header">
-            <h2 class="deposits-title">Daily Deposits - ${selectedPage}</h2>
-            <button class="close-deposits-btn" onclick="closePageDeposits()" title="Close">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-          
-          <div style="margin-bottom: 1.5rem;">
-            <h4 style="color: var(--text-primary); margin-bottom: 1rem; text-align: center;">${data.currentMonth}</h4>
-      `;
-
-      if (data.monthlyComparison) {
-        const comparison = data.monthlyComparison;
-        const comparisonClass = comparison.direction === 'up' ? 'up' : comparison.direction === 'down' ? 'down' : 'same';
-        const arrow = comparison.direction === 'up' ? '🔼' : comparison.direction === 'down' ? '🔽' : '⚪';
-        
-        html += `
-          <div class="monthly-comparison ${comparisonClass}">
-            ${arrow} $${Math.abs(comparison.difference).toFixed(2)} vs ${comparison.previousMonth} (${comparison.direction === 'up' ? '+' : ''}${comparison.percentage}%)
-          </div>
-        `;
-      }
-
-      html += `
-          <div class="monthly-summary">
-            <div class="summary-card">
-              <div class="summary-value">$${data.totalAmount.toFixed(2)}</div>
-              <div class="summary-label">Total Amount</div>
-            </div>
-            <div class="summary-card">
-              <div class="summary-value">${data.totalTransactions}</div>
-              <div class="summary-label">Total Transactions</div>
-            </div>
-            <div class="summary-card">
-              <div class="summary-value">${data.totalDaysInPeriod}</div>
-              <div class="summary-label">Total Days</div>
-            </div>
-            <div class="summary-card">
-              <div class="summary-value">$${dailyAverage.toFixed(2)}</div>
-              <div class="summary-label">Daily Average</div>
-            </div>
-          </div>
+  if (!data.success || !data.dailyDeposits || data.dailyDeposits.length === 0) {
+    pageDepositsView.innerHTML = `
+      <div class="page-deposits-view">
+        <div class="deposits-header">
+          <h2 class="deposits-title">Daily Deposits - ${selectedPage}</h2>
+          <button class="close-deposits-btn" onclick="closePageDeposits()" title="Close">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
-        
-        <div class="table-container">
-          <div class="table-header">
-            <h3 class="table-title">Daily Deposit Breakdown - ${data.currentMonth}</h3>
-            <div class="pagination-controls">
-              <div class="pagination-info">
-                Page ${data.currentPage} of ${data.totalPages}
-              </div>
-              <div class="pagination-buttons" id="pageDepositsPaginationContainer"></div>
-            </div>
-          </div>
-          <div class="table-scroll-container">
-            <table class="daily-deposits-table">
-              <thead>
-                <tr>
-                  <th style="text-align: left; min-width: 120px;">Date</th>
-                  <th style="text-align: right; min-width: 100px;">Amount</th>
-                  <th style="text-align: center; min-width: 100px;">Transactions</th>
-                  <th style="text-align: center; min-width: 140px;">Daily Trend</th>
-                </tr>
-              </thead>
-              <tbody>
-      `;
-
-      data.dailyDeposits.forEach(day => {
-        let trendHtml = '-';
-        if (day.trend) {
-          const trendClass = day.trend.direction === 'up' ? 'trend-up' : day.trend.direction === 'down' ? 'trend-down' : 'trend-same';
-          const arrow = day.trend.direction === 'up' ? '🔼' : day.trend.direction === 'down' ? '🔽' : '⚪';
-          const sign = day.trend.direction === 'up' ? '+' : '';
-          
-          trendHtml = `
-            <span class="${trendClass}">
-              ${arrow} $${Math.abs(day.trend.difference).toFixed(2)} (${sign}${day.trend.percentage}%)
-            </span>
-          `;
-        }
-
-        const amountClass = day.totalAmount > 0 ? 'amount-cell positive' : 'amount-cell zero';
-        const amountDisplay = day.totalAmount > 0 ? '$' + day.totalAmount.toFixed(2) : '$0.00';
-        
-        html += `
-          <tr>
-            <td style="text-align: left;">${day.displayDate}</td>
-            <td class="${amountClass}">${amountDisplay}</td>
-            <td class="count-cell">${day.transactionCount}</td>
-            <td class="trend-cell">${trendHtml}</td>
-          </tr>
-        `;
-      });
-
-      html += `
-                <tr class="total-row">
-                  <td style="text-align: left;"><strong>TOTAL</strong></td>
-                  <td class="amount-cell positive"><strong>$${data.totalAmount.toFixed(2)}</strong></td>
-                  <td class="count-cell"><strong>${data.totalTransactions}</strong></td>
-                  <td class="trend-cell">-</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+          <p>${data.message || "No daily deposit data available."}</p>
         </div>
-        
-        <div style="margin-top: 1.5rem; background: var(--bg-secondary); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
-          <p style="color: var(--text-primary); font-size: 0.9rem; text-align: center;">
-            <i class="fas fa-info-circle"></i> Showing ${data.dailyDeposits.length} day(s) for ${data.currentMonth}
-            ${data.monthlyComparison ? ` | Compared to ${data.monthlyComparison.previousMonth}` : ''}
-          </p>
+      </div>
+    `;
+    return;
+  }
+
+  const totalDaysInPeriod = data.dailyDeposits.length;
+  const dailyAverage = totalDaysInPeriod > 0 ? data.totalAmount / totalDaysInPeriod : 0;
+
+  let html = `
+    <div class="page-deposits-view">
+      <div class="deposits-header">
+        <h2 class="deposits-title">Daily Deposits - ${selectedPage}</h2>
+        <button class="close-deposits-btn" onclick="closePageDeposits()" title="Close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div style="margin-bottom: 1.5rem;">
+        <h4 style="color: var(--text-primary); margin-bottom: 1rem; text-align: center;">${data.currentMonth}</h4>
+  `;
+
+  if (data.monthlyComparison) {
+    const comparison = data.monthlyComparison;
+    const comparisonClass = comparison.direction === 'up' ? 'up' : comparison.direction === 'down' ? 'down' : 'same';
+    const arrow = comparison.direction === 'up' ? '🔼' : comparison.direction === 'down' ? '🔽' : '⚪';
+    
+    html += `
+      <div class="monthly-comparison ${comparisonClass}">
+        ${arrow} $${Math.abs(comparison.difference).toFixed(2)} vs ${comparison.previousMonth} (${comparison.direction === 'up' ? '+' : ''}${comparison.percentage}%)
+      </div>
+    `;
+  }
+
+  html += `
+      <div class="monthly-summary">
+        <div class="summary-card">
+          <div class="summary-value">$${data.totalAmount.toFixed(2)}</div>
+          <div class="summary-label">Total Amount</div>
         </div>
+        <div class="summary-card">
+          <div class="summary-value">${data.totalTransactions}</div>
+          <div class="summary-label">Total Transactions</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-value">${totalDaysInPeriod}</div>
+          <div class="summary-label">Total Days</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-value">$${dailyAverage.toFixed(2)}</div>
+          <div class="summary-label">Daily Average</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="table-container">
+      <div class="table-header">
+        <h3 class="table-title">Daily Deposit Breakdown - ${data.currentMonth}</h3>
+        <div class="pagination-controls">
+          <div class="pagination-info">
+            Page ${data.currentPage} of ${data.totalPages}
+          </div>
+          <div class="pagination-buttons" id="pageDepositsPaginationContainer"></div>
+        </div>
+      </div>
+      <div class="table-scroll-container">
+        <table class="daily-deposits-table">
+          <thead>
+            <tr>
+              <th style="text-align: left; min-width: 120px;">Date</th>
+              <th style="text-align: right; min-width: 100px;">Amount</th>
+              <th style="text-align: center; min-width: 100px;">Transactions</th>
+              <th style="text-align: center; min-width: 140px;">Daily Trend</th>
+            </tr>
+          </thead>
+          <tbody>
+  `;
+
+  // DEBUG: Check what dates we actually have
+  console.log("Available dates:", data.dailyDeposits.map(d => d.displayDate));
+  console.log("Total days:", data.dailyDeposits.length);
+
+  data.dailyDeposits.forEach(day => {
+    let trendHtml = '-';
+    if (day.trend) {
+      const trendClass = day.trend.direction === 'up' ? 'trend-up' : day.trend.direction === 'down' ? 'trend-down' : 'trend-same';
+      const arrow = day.trend.direction === 'up' ? '🔼' : day.trend.direction === 'down' ? '🔽' : '⚪';
+      const sign = day.trend.direction === 'up' ? '+' : '';
+      
+      trendHtml = `
+        <span class="${trendClass}">
+          ${arrow} $${Math.abs(day.trend.difference).toFixed(2)} (${sign}${day.trend.percentage}%)
+        </span>
       `;
-
-      pageDepositsView.innerHTML = html;
-
-      const paginationContainer = document.getElementById('pageDepositsPaginationContainer');
-      if (data.totalPages > 1) {
-        renderPagination(data.totalPages, data.currentPage, 1, paginationContainer, 'changePageDepositsMonth');
-      }
     }
+
+    const amountClass = day.totalAmount > 0 ? 'amount-cell positive' : 'amount-cell zero';
+    const amountDisplay = day.totalAmount > 0 ? '$' + day.totalAmount.toFixed(2) : '$0.00';
+    
+    html += `
+      <tr>
+        <td style="text-align: left;">${day.displayDate}</td>
+        <td class="${amountClass}">${amountDisplay}</td>
+        <td class="count-cell">${day.transactionCount}</td>
+        <td class="trend-cell">${trendHtml}</td>
+      </tr>
+    `;
+  });
+
+  html += `
+            <tr class="total-row">
+              <td style="text-align: left;"><strong>TOTAL</strong></td>
+              <td class="amount-cell positive"><strong>$${data.totalAmount.toFixed(2)}</strong></td>
+              <td class="count-cell"><strong>${data.totalTransactions}</strong></td>
+              <td class="trend-cell">-</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div style="margin-top: 1.5rem; background: var(--bg-secondary); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+      <p style="color: var(--text-primary); font-size: 0.9rem; text-align: center;">
+        <i class="fas fa-info-circle"></i> Showing ${data.dailyDeposits.length} day(s) for ${data.currentMonth}
+        ${data.monthlyComparison ? ` | Compared to ${data.monthlyComparison.previousMonth}` : ''}
+      </p>
+    </div>
+  `;
+
+  pageDepositsView.innerHTML = html;
+
+  const paginationContainer = document.getElementById('pageDepositsPaginationContainer');
+  if (data.totalPages > 1) {
+    renderPagination(data.totalPages, data.currentPage, 1, paginationContainer, 'changePageDepositsMonth');
+  }
+}
 
     // FIXED: Enhanced Player History Rendering Function with proper timezone handling
     function renderEnhancedPlayerHistory(data, playerName, pageName, isGlobal = false) {
