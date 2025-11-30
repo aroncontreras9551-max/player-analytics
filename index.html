@@ -1607,7 +1607,7 @@
     };
 
     // =============================================
-    // TIME CONVERSION UTILITIES - FIXED FOR PAKISTAN TIME
+    // TIME CONVERSION UTILITIES - FIXED FOR PAKISTAN TIME WITH AM/PM
     // =============================================
 
     function convertUTCToPKT(utcDateString) {
@@ -1627,15 +1627,22 @@
             const pktOffset = 5 * 60 * 60 * 1000; // 5 hours in milliseconds
             const pktDate = new Date(date.getTime() + pktOffset);
             
-            // Format as: DD/MM/YYYY, HH:MM:SS (Pakistan format)
+            // Format as: DD/MM/YYYY, HH:MM:SS AM/PM (Pakistan format with AM/PM)
             const day = String(pktDate.getUTCDate()).padStart(2, '0');
             const month = String(pktDate.getUTCMonth() + 1).padStart(2, '0');
             const year = pktDate.getUTCFullYear();
-            const hours = String(pktDate.getUTCHours()).padStart(2, '0');
+            
+            let hours = pktDate.getUTCHours();
             const minutes = String(pktDate.getUTCMinutes()).padStart(2, '0');
             const seconds = String(pktDate.getUTCSeconds()).padStart(2, '0');
             
-            return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
+            // Convert to 12-hour format with AM/PM
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            const hours12 = String(hours).padStart(2, '0');
+            
+            return `${day}/${month}/${year}, ${hours12}:${minutes}:${seconds} ${ampm}`;
         } catch (error) {
             console.error('Error converting date to PKT:', error, utcDateString);
             return 'Date Error';
@@ -1665,23 +1672,24 @@
         }
     }
 
-    function formatTimeSince(lastDepositDate) {
-        if (!lastDepositDate) return 'N/A';
+    function formatTimeSince(utcDateString) {
+        if (!utcDateString) return 'N/A';
         
         try {
+            // Get current time in Pakistan Time
             const now = new Date();
-            const lastDeposit = new Date(lastDepositDate);
-            
-            // Check if dates are valid
-            if (isNaN(now.getTime()) || isNaN(lastDeposit.getTime())) {
-                console.error('Invalid dates in formatTimeSince:', { now, lastDepositDate });
-                return 'N/A';
-            }
-            
-            // Convert both times to PKT for accurate comparison
             const pktOffset = 5 * 60 * 60 * 1000;
             const nowPKT = new Date(now.getTime() + pktOffset);
-            const lastDepositPKT = new Date(lastDeposit.getTime() + pktOffset);
+            
+            // Convert the provided UTC timestamp to Pakistan Time for calculation
+            const lastDepositUTC = new Date(utcDateString);
+            const lastDepositPKT = new Date(lastDepositUTC.getTime() + pktOffset);
+            
+            // Check if dates are valid
+            if (isNaN(nowPKT.getTime()) || isNaN(lastDepositPKT.getTime())) {
+                console.error('Invalid dates in formatTimeSince:', { nowPKT, lastDepositPKT, utcDateString });
+                return 'N/A';
+            }
             
             const diffMs = nowPKT - lastDepositPKT;
             
@@ -1706,7 +1714,7 @@
                 return `${fullDays} day${fullDays > 1 ? 's' : ''} ${remainingHours} hours ago`;
             }
         } catch (error) {
-            console.error('Error calculating time since:', error, lastDepositDate);
+            console.error('Error calculating time since:', error, utcDateString);
             return 'N/A';
         }
     }
@@ -1901,125 +1909,127 @@
     }
 
     async function getPageActivity(pageName) {
-  try {
-    // Get latest status for the page
-    const { data: statusData, error: statusError } = await supabase
-      .from('latest_status')
-      .select('*')
-      .eq('page_name', pageName);
-    
-    if (statusError) throw statusError;
-    
-    if (!statusData || statusData.length === 0) {
-      return getEmptyPageData(pageName);
-    }
-
-    // Get deposit data for calculations
-    const depositData = await computePlayerDeposits(pageName);
-    const playersWithNotes = await getAllPlayersWithNotes(pageName);
-    
-    // Get status changes for this page to show in activity notes
-    const { data: changesData } = await supabase
-      .from('status_changes')
-      .select('*')
-      .eq('page_name', pageName)
-      .order('change_date', { ascending: false })
-      .limit(100);
-
-    // Create a map of recent status changes per player
-    const recentChanges = {};
-    if (changesData) {
-      changesData.forEach(change => {
-        const key = change.player_name;
-        if (!recentChanges[key]) {
-          recentChanges[key] = change;
+      try {
+        // Get latest status for the page
+        const { data: statusData, error: statusError } = await supabase
+          .from('latest_status')
+          .select('*')
+          .eq('page_name', pageName);
+        
+        if (statusError) throw statusError;
+        
+        if (!statusData || statusData.length === 0) {
+          return getEmptyPageData(pageName);
         }
-      });
+
+        // Get deposit data for calculations
+        const depositData = await computePlayerDeposits(pageName);
+        const playersWithNotes = await getAllPlayersWithNotes(pageName);
+        
+        // Get status changes for this page to show in activity notes
+        const { data: changesData } = await supabase
+          .from('status_changes')
+          .select('*')
+          .eq('page_name', pageName)
+          .order('change_date', { ascending: false })
+          .limit(100);
+
+        // Create a map of recent status changes per player
+        const recentChanges = {};
+        if (changesData) {
+          changesData.forEach(change => {
+            const key = change.player_name;
+            if (!recentChanges[key]) {
+              recentChanges[key] = change;
+            }
+          });
+        }
+
+        const resultPlayers = [];
+        const recentActivePlayers = [];
+        const recentInactivePlayers = [];
+        
+        statusData.forEach(player => {
+          const playerName = player.player_name;
+          // FIXED: Store original UTC timestamp for calculations, convert to PKT for display
+          const originalTimestamp = player.last_deposit_date;
+          const lastDepositDisplay = convertUTCToPKT(player.last_deposit_date);
+          const daysSince = player.days_since_last_deposit || 0;
+          const status = player.status || "Inactive";
+          
+          const playerDeposits = depositData[playerName] || { total: 0, last7Days: 0 };
+          
+          // Enhanced activity notes with status change info
+          let activityNotes = player.activity_notes || "";
+          const recentChange = recentChanges[playerName];
+          if (recentChange) {
+            activityNotes += ` | Last status change: ${recentChange.old_status} → ${recentChange.new_status} on ${convertUTCToPKT(recentChange.change_date)}`;
+          }
+          
+          const playerData = {
+            player: playerName,
+            lastDeposit: lastDepositDisplay, // Display in PKT
+            originalTimestamp: originalTimestamp, // Keep UTC for calculations
+            daysSince: daysSince,
+            status: status,
+            totalDeposit: playerDeposits.total,
+            last7DaysDeposit: playerDeposits.last7Days,
+            activityNotes: activityNotes,
+            hasNotes: playersWithNotes[playerName] || false
+          };
+          
+          resultPlayers.push(playerData);
+          
+          const recentActiveCheck = isRecentActiveOptimized(playerName, depositData);
+          if (status === "Active" && recentActiveCheck.isRecentActive) {
+            playerData.gapDays = recentActiveCheck.gapDays;
+            recentActivePlayers.push(playerData);
+          }
+          
+          if (status === "Inactive" && daysSince >= RECENT_INACTIVE_MIN_DAYS && daysSince < RECENT_INACTIVE_MAX_DAYS) {
+            recentInactivePlayers.push(playerData);
+          }
+        });
+
+        const highRiskData = await getHighRiskPlayers(pageName);
+        const highRiskPlayers = highRiskData.highRiskPlayers || [];
+
+        highRiskPlayers.forEach(player => {
+          player.hasNotes = playersWithNotes[player.player] || false;
+        });
+
+        resultPlayers.sort((a, b) => new Date(b.originalTimestamp) - new Date(a.originalTimestamp));
+        recentActivePlayers.sort((a, b) => new Date(b.originalTimestamp) - new Date(a.originalTimestamp));
+        recentInactivePlayers.sort((a, b) => new Date(b.originalTimestamp) - new Date(a.originalTimestamp));
+        highRiskPlayers.sort((a, b) => {
+          const timeA = new Date(a.lastDeposit).getTime();
+          const timeB = new Date(b.lastDeposit).getTime();
+          return timeB - timeA;
+        });
+
+        const counts = {
+          Total: resultPlayers.length,
+          Active: resultPlayers.filter(p => p.status === "Active").length,
+          Inactive: resultPlayers.filter(p => p.status === "Inactive" && p.daysSince >= INACTIVE_THRESHOLD).length,
+          RecentActive: recentActivePlayers.length,
+          RecentInactive: recentInactivePlayers.length,
+          HighRisk: highRiskPlayers.length
+        };
+
+        return { 
+          page: pageName, 
+          counts, 
+          players: resultPlayers, 
+          recentActivePlayers, 
+          recentInactivePlayers,
+          highRiskPlayers: highRiskPlayers
+        };
+      } catch (error) {
+        console.error('Error getting page activity:', error);
+        showNotification('Error loading page data', 'error');
+        return getEmptyPageData(pageName);
+      }
     }
-
-    const resultPlayers = [];
-    const recentActivePlayers = [];
-    const recentInactivePlayers = [];
-    
-    statusData.forEach(player => {
-      const playerName = player.player_name;
-      const lastDeposit = player.last_deposit_date ? new Date(player.last_deposit_date).toLocaleString() : "";
-      const daysSince = player.days_since_last_deposit || 0;
-      const status = player.status || "Inactive";
-      
-      const playerDeposits = depositData[playerName] || { total: 0, last7Days: 0 };
-      
-      // Enhanced activity notes with status change info
-      let activityNotes = player.activity_notes || "";
-      const recentChange = recentChanges[playerName];
-      if (recentChange) {
-        activityNotes += ` | Last status change: ${recentChange.old_status} → ${recentChange.new_status} on ${new Date(recentChange.change_date).toLocaleDateString()}`;
-      }
-      
-      const playerData = {
-        player: playerName,
-        lastDeposit,
-        daysSince,
-        status,
-        totalDeposit: playerDeposits.total,
-        last7DaysDeposit: playerDeposits.last7Days,
-        activityNotes: activityNotes,
-        hasNotes: playersWithNotes[playerName] || false,
-        timestamp: player.last_deposit_date ? new Date(player.last_deposit_date).getTime() : 0
-      };
-      
-      resultPlayers.push(playerData);
-      
-      const recentActiveCheck = isRecentActiveOptimized(playerName, depositData);
-      if (status === "Active" && recentActiveCheck.isRecentActive) {
-        playerData.gapDays = recentActiveCheck.gapDays;
-        recentActivePlayers.push(playerData);
-      }
-      
-      if (status === "Inactive" && daysSince >= RECENT_INACTIVE_MIN_DAYS && daysSince < RECENT_INACTIVE_MAX_DAYS) {
-        recentInactivePlayers.push(playerData);
-      }
-    });
-
-    const highRiskData = await getHighRiskPlayers(pageName);
-    const highRiskPlayers = highRiskData.highRiskPlayers || [];
-
-    highRiskPlayers.forEach(player => {
-      player.hasNotes = playersWithNotes[player.player] || false;
-    });
-
-    resultPlayers.sort((a, b) => b.timestamp - a.timestamp);
-    recentActivePlayers.sort((a, b) => b.timestamp - a.timestamp);
-    recentInactivePlayers.sort((a, b) => b.timestamp - a.timestamp);
-    highRiskPlayers.sort((a, b) => {
-      const timeA = new Date(a.lastDeposit).getTime();
-      const timeB = new Date(b.lastDeposit).getTime();
-      return timeB - timeA;
-    });
-
-    const counts = {
-      Total: resultPlayers.length,
-      Active: resultPlayers.filter(p => p.status === "Active").length,
-      Inactive: resultPlayers.filter(p => p.status === "Inactive" && p.daysSince >= INACTIVE_THRESHOLD).length,
-      RecentActive: recentActivePlayers.length,
-      RecentInactive: recentInactivePlayers.length,
-      HighRisk: highRiskPlayers.length
-    };
-
-    return { 
-      page: pageName, 
-      counts, 
-      players: resultPlayers, 
-      recentActivePlayers, 
-      recentInactivePlayers,
-      highRiskPlayers: highRiskPlayers
-    };
-  } catch (error) {
-    console.error('Error getting page activity:', error);
-    showNotification('Error loading page data', 'error');
-    return getEmptyPageData(pageName);
-  }
-}
 
     function getEmptyPageData(pageName) {
       return {
@@ -2360,7 +2370,7 @@
         }
 
         const playerDeposits = data.map(deposit => {
-          // FIXED: Use PKT conversion for display
+          // FIXED: Store original UTC for calculations, convert to PKT for display
           const originalDate = new Date(deposit.deposit_date);
           const pktDate = convertUTCToPKT(deposit.deposit_date);
           
@@ -2368,16 +2378,19 @@
             date: originalDate, // Use original for calculations
             timestamp: pktDate, // Use PKT for display
             amount: parseFloat(deposit.amount) || 0,
-            originalDate: deposit.deposit_date // Keep original
+            originalDate: deposit.deposit_date // Keep original UTC
           };
         });
 
         playerDeposits.sort((a, b) => a.date - b.date);
         
-        const today = new Date();
+        // FIXED: Use current Pakistan time for calculations
+        const now = new Date();
+        const pktOffset = 5 * 60 * 60 * 1000;
+        const nowPKT = new Date(now.getTime() + pktOffset);
         const mostRecentDeposit = playerDeposits[playerDeposits.length - 1];
         
-        const timeSinceMs = today - mostRecentDeposit.date;
+        const timeSinceMs = nowPKT - mostRecentDeposit.date;
         const hoursSince = Math.floor(timeSinceMs / (1000 * 60 * 60));
         const minutesSince = Math.floor((timeSinceMs % (1000 * 60 * 60)) / (1000 * 60));
         const daysSince = hoursSince / 24;
@@ -2433,7 +2446,7 @@
         let currentDate = new Date(firstDate);
         currentDate.setHours(0, 0, 0, 0);
         
-        const todayStart = new Date(today);
+        const todayStart = new Date(nowPKT);
         todayStart.setHours(0, 0, 0, 0);
         
         const timeline = [];
@@ -2619,7 +2632,12 @@
         const currentMonthDeposits = {};
         const currentMonthStart = new Date(currentMonth + '-01');
         const currentMonthEnd = new Date(currentMonthStart.getFullYear(), currentMonthStart.getMonth() + 1, 0);
-        const today = new Date();
+        
+        // FIXED: Use current Pakistan time
+        const now = new Date();
+        const pktOffset = 5 * 60 * 60 * 1000;
+        const nowPKT = new Date(now.getTime() + pktOffset);
+        const today = nowPKT;
         
         Object.keys(allDailyDeposits).forEach(dateKey => {
           const day = allDailyDeposits[dateKey];
@@ -2749,7 +2767,7 @@
     }
 
     // =============================================
-    // UI FUNCTIONS (REMAIN THE SAME)
+    // UI FUNCTIONS
     // =============================================
 
     // Initialize on load
@@ -3026,9 +3044,9 @@
       disableControlButtons();
       
       document.getElementById('dashboardBoxes').style.display = 'none';
-      document.getElementById('tableContainer').innerHTML = '';
+      document.getElementById('tableContainer').style.display = 'none';
       document.getElementById('playerHistorySection').style.display = 'none';
-      document.getElementById('globalPlayerHistorySection').style.display = 'none';
+      document.getElementById('globalPlayerHistorySection').style.display = 'block';
       document.getElementById('backContainer').innerHTML = '';
       pageDepositsView.style.display = 'none';
       
@@ -3039,7 +3057,6 @@
       try {
         const data = await getEnhancedPlayerHistory(playerName, pageName);
         hideLoader();
-        document.getElementById('globalPlayerHistorySection').style.display = 'block';
         const backDiv = document.getElementById('backContainer');
         backDiv.innerHTML = '<button class="btn btn-secondary" onclick="backToLanding()"><i class="fas fa-arrow-left"></i> Back to Search</button>';
         renderEnhancedPlayerHistory(data, playerName, pageName, true);
@@ -3216,6 +3233,7 @@
 
       const dash = document.getElementById('dashboardBoxes');
       dash.style.display = 'block';
+      document.getElementById('tableContainer').style.display = 'block';
 
       statsRow1.innerHTML = "";
       statsRow2.innerHTML = "";
@@ -3431,8 +3449,8 @@
       paginatedPlayers.forEach((p, index) => {
         const cls = p.status === "Active" ? "status-active" : "status-inactive";
         
-        // FIXED: Use the PKT-formatted lastDeposit and calculate time since properly
-        const gapDisplay = formatTimeSince(p.originalTimestamp || p.lastDeposit);
+        // FIXED: Use the original UTC timestamp for time since calculation
+        const gapDisplay = formatTimeSince(p.originalTimestamp);
         const gapDays = p.gapDays ? p.gapDays : 'N/A';
         
         const notesBtnClass = p.hasNotes ? 'notes-btn has-notes' : 'notes-btn';
@@ -3508,7 +3526,7 @@
         const statusClass = p.currentStatus === "Active" ? "status-active" : "status-inactive";
         
         // FIXED: Use PKT conversion for last deposit display
-        const lastDepositPKT = convertUTCToPKTDateOnly(p.lastDeposit);
+        const lastDepositPKT = convertUTCToPKT(p.lastDeposit);
         const gapDisplay = formatTimeSince(p.lastDeposit);
         
         let gapDetails = '';
@@ -4111,92 +4129,79 @@
     }
 
     // Updated refresh function
-async function confirmRefresh() {
-  const pin = refreshPinInput.value.trim();
-  if (!pin) {
-    showNotification('Please enter PIN', 'error');
-    return;
-  }
-  
-  if (pin !== AUTH_PIN) {
-    showNotification('Invalid PIN', 'error');
-    return;
-  }
-  
-  hideRefreshModal();
-  disableAllButtons();
-  refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
-  showLoader();
-  
-  try {
-    // Call refresh_player_status with empty parameters
-    const { data, error } = await supabase.rpc('refresh_player_status', {});
-    
-    if (error) throw error;
-    
-    if (data && data.success) {
-      showNotification(data.message, 'success');
-      await loadDashboardData();
-    } else {
-      showNotification('Refresh failed: ' + (data?.message || 'Unknown error'), 'error');
+    async function confirmRefresh() {
+      const pin = refreshPinInput.value.trim();
+      if (!pin) {
+        showNotification('Please enter PIN', 'error');
+        return;
+      }
+      
+      if (pin !== AUTH_PIN) {
+        showNotification('Invalid PIN', 'error');
+        return;
+      }
+      
+      hideRefreshModal();
+      disableAllButtons();
+      refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+      showLoader();
+      
+      try {
+        // Call refresh_player_status with empty parameters
+        const { data, error } = await supabase.rpc('refresh_player_status', {});
+        
+        if (error) throw error;
+        
+        if (data && data.success) {
+          showNotification(data.message, 'success');
+          await loadDashboardData();
+        } else {
+          showNotification('Refresh failed: ' + (data?.message || 'Unknown error'), 'error');
+        }
+      } catch (error) {
+        showNotification('Error refreshing data: ' + error.message, 'error');
+      } finally {
+        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Data';
+        enableAllButtons();
+      }
     }
-  } catch (error) {
-    showNotification('Error refreshing data: ' + error.message, 'error');
-  } finally {
-    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Data';
-    enableAllButtons();
-  }
-}
 
     async function confirmForceCleanup() {
-  const pin = cleanupPinInput.value.trim();
-  if (!pin) {
-    showNotification('Please enter PIN', 'error');
-    return;
-  }
-  
-  if (pin !== AUTH_PIN) {
-    showNotification('Invalid PIN', 'error');
-    return;
-  }
-  
-  hideCleanupModal();
-  disableAllButtons();
-  forceCleanupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cleaning...';
-  showLoader();
-  
-  try {
-    // Call force_cleanup with empty parameters
-    const { data, error } = await supabase.rpc('force_cleanup', {});
-    
-    if (error) throw error;
-    
-    if (data && data.success) {
-      showNotification(data.message, 'warning');
-      await loadDashboardData();
-    } else {
-      showNotification('Cleanup failed: ' + (data?.message || 'Unknown error'), 'error');
+      const pin = cleanupPinInput.value.trim();
+      if (!pin) {
+        showNotification('Please enter PIN', 'error');
+        return;
+      }
+      
+      if (pin !== AUTH_PIN) {
+        showNotification('Invalid PIN', 'error');
+        return;
+      }
+      
+      hideCleanupModal();
+      disableAllButtons();
+      forceCleanupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cleaning...';
+      showLoader();
+      
+      try {
+        // Call force_cleanup with empty parameters
+        const { data, error } = await supabase.rpc('force_cleanup', {});
+        
+        if (error) throw error;
+        
+        if (data && data.success) {
+          showNotification(data.message, 'warning');
+          await loadDashboardData();
+        } else {
+          showNotification('Cleanup failed: ' + (data?.message || 'Unknown error'), 'error');
+        }
+      } catch (error) {
+        showNotification('Error during cleanup: ' + error.message, 'error');
+      } finally {
+        forceCleanupBtn.innerHTML = '<i class="fas fa-broom"></i> Force Cleanup';
+        enableAllButtons();
+      }
     }
-  } catch (error) {
-    showNotification('Error during cleanup: ' + error.message, 'error');
-  } finally {
-    forceCleanupBtn.innerHTML = '<i class="fas fa-broom"></i> Force Cleanup';
-    enableAllButtons();
-  }
-}
-
-// Updated cache clearing function
-function clearPageCache() {
-  // Since we're not using browser cache for Supabase data, 
-  // we'll clear any local storage or force reload data
-  sessionStorage.removeItem('currentPage');
-  sessionStorage.removeItem('currentView');
-  
-  // Force reload current data
-  if (selectedPage) {
-    loadDashboardData();
-  }
-}
 
     function disableAllButtons() {
       changePageBtn.disabled = true;
