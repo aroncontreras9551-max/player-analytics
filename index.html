@@ -4105,44 +4105,6 @@
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', detectTheme);
     detectTheme();
-
-// Test function - add this
-async function testSupabaseConnection() {
-  console.log("🔍 Testing Supabase connection...");
-  
-  try {
-    // Test deposits table
-    const { data: deposits, error: depositsError } = await supabase
-      .from('deposits')
-      .select('*')
-      .limit(5);
-    
-    console.log("Deposits data:", deposits);
-    console.log("Deposits error:", depositsError);
-    
-    // Test latest_status table  
-    const { data: status, error: statusError } = await supabase
-      .from('latest_status')
-      .select('*')
-      .limit(5);
-    
-    console.log("Status data:", status);
-    console.log("Status error:", statusError);
-    
-    if (depositsError || statusError) {
-      showNotification('Database connection error: ' + (depositsError?.message || statusError?.message), 'error');
-    } else {
-      showNotification('Database connected successfully! Found ' + (deposits?.length || 0) + ' deposits', 'success');
-    }
-    
-  } catch (error) {
-    console.error("Connection test failed:", error);
-    showNotification('Connection test failed: ' + error.message, 'error');
-  }
-}
-
-// Call this on page load
-testSupabaseConnection();
     
   </script>
 </body>
