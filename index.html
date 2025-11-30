@@ -2221,6 +2221,7 @@
       }
     }
 
+    // FIXED: Properly group deposits by day without duplicates
     function groupDepositsByDay(deposits) {
       const depositsByDay = {};
       
@@ -2228,15 +2229,24 @@
         const dateKey = formatDateForGrouping(deposit);
         
         if (!depositsByDay[dateKey]) {
-          depositsByDay[dateKey] = deposit;
+          depositsByDay[dateKey] = {
+            date: dateKey,
+            deposits: [deposit],
+            count: 1
+          };
         } else {
-          if (deposit > depositsByDay[dateKey]) {
-            depositsByDay[dateKey] = deposit;
-          }
+          depositsByDay[dateKey].deposits.push(deposit);
+          depositsByDay[dateKey].count++;
         }
       });
       
-      const uniqueDays = Object.values(depositsByDay);
+      // Return unique days sorted
+      const uniqueDays = Object.values(depositsByDay).map(day => {
+        // Return the latest deposit time for that day
+        const latestDeposit = day.deposits.sort((a, b) => b - a)[0];
+        return latestDeposit;
+      });
+      
       return uniqueDays.sort((a, b) => a - b);
     }
 
@@ -2453,7 +2463,7 @@
           timeSinceDisplay = `${fullDays} day${fullDays > 1 ? 's' : ''} ${remainingHours} hours ago`;
         }
 
-        // Group deposits by PKT date
+        // Group deposits by PKT date - FIXED: Proper aggregation without duplicates
         const depositsByDay = {};
         playerDeposits.forEach(deposit => {
           // Use PKT date for grouping
@@ -2607,6 +2617,7 @@
       }
     }
 
+    // FIXED: Page Daily Deposits function - completely rewritten to fix duplicate dates and cross-month issues
     async function getPageDailyDeposits(pageName, monthOffset = 0) {
       try {
         const { data, error } = await supabase
@@ -2629,6 +2640,7 @@
           };
         }
         
+        // FIXED: Properly aggregate deposits by date without duplicates
         const allDailyDeposits = {};
         
         data.forEach(deposit => {
@@ -2639,12 +2651,13 @@
             const pktDate = convertUTCToPKTDate(deposit.deposit_date);
             const dateKey = formatDateForGrouping(pktDate);
             const displayDate = convertUTCToPKTDateOnly(deposit.deposit_date);
+            const monthKey = pktDate.toISOString().substring(0, 7); // YYYY-MM format
             
             if (!allDailyDeposits[dateKey]) {
               allDailyDeposits[dateKey] = {
                 date: dateKey,
                 displayDate: displayDate,
-                monthKey: pktDate.toISOString().substring(0, 7),
+                monthKey: monthKey,
                 totalAmount: 0,
                 transactionCount: 0,
                 timestamp: pktDate.getTime()
@@ -2656,6 +2669,7 @@
           }
         });
         
+        // Get unique months from the actual deposit data
         const allMonths = new Set();
         Object.values(allDailyDeposits).forEach(day => {
           allMonths.add(day.monthKey);
@@ -2684,27 +2698,35 @@
         const currentMonth = sortedMonths[currentMonthIndex];
         const previousMonth = currentMonthIndex + 1 < sortedMonths.length ? sortedMonths[currentMonthIndex + 1] : null;
         
+        // FIXED: Only include dates from the current month, no cross-month contamination
         const currentMonthDeposits = {};
+        
+        // First, add actual deposit days for the current month
+        Object.keys(allDailyDeposits).forEach(dateKey => {
+          const day = allDailyDeposits[dateKey];
+          if (day.monthKey === currentMonth) {
+            currentMonthDeposits[dateKey] = day;
+          }
+        });
+        
+        // FIXED: Generate date range only for the specific month being viewed
         const currentMonthStart = new Date(currentMonth + '-01');
         const currentMonthEnd = new Date(currentMonthStart.getFullYear(), currentMonthStart.getMonth() + 1, 0);
         
         // Use current Pakistan time
         const nowPKT = getCurrentPKT();
-        const today = nowPKT;
+        const today = getStartOfDayPKT(nowPKT);
         
-        Object.keys(allDailyDeposits).forEach(dateKey => {
-          const day = allDailyDeposits[dateKey];
-          const dayDate = new Date(day.date);
-          if (day.monthKey === currentMonth && dayDate <= today) {
-            currentMonthDeposits[dateKey] = day;
-          }
-        });
+        // Only generate dates up to today for current month, or full month for past months
+        const actualEndDate = currentMonth === formatDateForGrouping(nowPKT).substring(0, 7) 
+          ? today 
+          : getStartOfDayPKT(currentMonthEnd);
         
         let currentDate = new Date(currentMonthStart);
         currentDate.setHours(0, 0, 0, 0);
-        const actualEndDate = today;
         
-        while (currentDate <= actualEndDate) {
+        // FIXED: Generate dates only for the current month, no cross-month
+        while (currentDate <= actualEndDate && currentDate.getMonth() === currentMonthStart.getMonth()) {
           const dateKey = formatDateForGrouping(currentDate);
           const displayDate = convertUTCToPKTDateOnly(currentDate.toISOString());
           
@@ -2765,6 +2787,7 @@
         let monthlyComparison = null;
         
         if (previousMonth) {
+          // FIXED: Calculate previous month total only from actual deposits in that month
           Object.values(allDailyDeposits).forEach(day => {
             if (day.monthKey === previousMonth) {
               previousMonthTotal += day.totalAmount;
@@ -2803,7 +2826,7 @@
           availableMonths: availableMonths,
           currentPage: currentMonthIndex + 1,
           totalPages: sortedMonths.length,
-          message: `Showing ${totalDaysInPeriod} days including today for ${new Date(currentMonth + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
+          message: `Showing ${totalDaysInPeriod} days for ${new Date(currentMonth + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
         };
       } catch (error) {
         console.error('Error getting page daily deposits:', error);
