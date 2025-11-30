@@ -1,5 +1,5 @@
 {
-  "name": "player-analytics-dashboard",
+  "name": "player-analytics",
   "version": "1.0.0",
   "description": "Player Activity Analytics Dashboard with Supabase",
   "type": "module",
