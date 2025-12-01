@@ -2797,10 +2797,12 @@ async function getPageDailyDeposits(pageName, monthOffset = 0) {
       const dateKey = formatDateForGrouping(pktDate);
       const displayDate = convertUTCToPKTDateOnly(utcDate.toISOString());
       
-      // Check if we should include this day (for current month, only include up to today)
-      const shouldInclude = isCurrentMonth ? 
-        pktDate <= nowPKT : 
-        true; // For past months, include all days
+      // Compare only dates (not times) for current month
+const shouldInclude = isCurrentMonth ? 
+  pktDate.getUTCFullYear() <= nowPKT.getUTCFullYear() && 
+  pktDate.getUTCMonth() <= nowPKT.getUTCMonth() && 
+  pktDate.getUTCDate() <= nowPKT.getUTCDate() : 
+  true; // For past months, include all days
       
       if (shouldInclude) {
         if (dailyDataMap[dateKey]) {
