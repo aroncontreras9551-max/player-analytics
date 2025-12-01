@@ -1797,36 +1797,15 @@
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // =============================================
-    // FIXED: UPDATED TIME THRESHOLDS
+    // CONSTANTS AND CONFIGURATION
     // =============================================
-    const ACTIVE_MAX_DAYS = 2.999; // 2 days 23 hours 59 minutes = ~2.999 days
-    const RECENT_INACTIVE_MIN_DAYS = 3; // 3 days 0 minutes
-    const RECENT_INACTIVE_MAX_DAYS = 4.999; // 4 days 23 hours 59 minutes = ~4.999 days
-    const HIGH_RISK_MIN_DAYS = 5; // 5 days 0 minutes
-    const HIGH_RISK_MAX_DAYS = 14.999; // 14 days 23 hours 59 minutes = ~14.999 days
-    const INACTIVE_THRESHOLD = 15; // 15 days 0 minutes
-    
+    const DAYS_ACTIVE = 3;
+    const INACTIVE_THRESHOLD = 15;
+    const HIGH_RISK_MAX_DAYS = 15;
+    const RECENT_INACTIVE_MIN_DAYS = 3;
+    const RECENT_INACTIVE_MAX_DAYS = 5;
     const PLAYERS_PER_PAGE = 50;
     const AUTH_PIN = "8152";
-
-    // =============================================
-    // FIXED: STATUS CALCULATION FUNCTION
-    // =============================================
-    function calculatePlayerStatus(daysSince) {
-      // FIXED: Use the correct thresholds
-      if (daysSince <= ACTIVE_MAX_DAYS) {
-        return "Active"; // 0 min to 2 days 23 hrs 59 min
-      } else if (daysSince >= RECENT_INACTIVE_MIN_DAYS && daysSince < RECENT_INACTIVE_MAX_DAYS) {
-        return "Inactive"; // 3 days 0 min to 4 days 23 hrs 59 min (will be filtered to Recent Inactive table)
-      } else if (daysSince >= HIGH_RISK_MIN_DAYS && daysSince < HIGH_RISK_MAX_DAYS) {
-        return "Inactive"; // 5 days 0 min to 14 days 23 hrs 59 min (will be filtered to High Risk table)
-      } else if (daysSince >= INACTIVE_THRESHOLD) {
-        return "Inactive"; // 15+ days
-      } else {
-        // This handles the gap between 2.999-3 days (shouldn't happen with proper calculation)
-        return "Inactive";
-      }
-    }
 
     // Page data with emojis - UPDATED WITH PROPER CASE NAMES
     const PAGES = [
@@ -2571,9 +2550,6 @@
       }
     }
 
-    // =============================================
-    // FIXED: UPDATED getPageActivity WITH CORRECT STATUS CALCULATION
-    // =============================================
     async function getPageActivity(pageName) {
       try {
         // Get latest status for the page
@@ -2614,9 +2590,7 @@
         const resultPlayers = [];
         const recentActivePlayers = [];
         const recentInactivePlayers = [];
-        const highRiskPlayers = [];
         
-        // FIXED: Process each player with correct status calculation
         statusData.forEach(player => {
           const playerName = player.player_name;
           const originalTimestamp = player.last_deposit_date;
@@ -2627,8 +2601,7 @@
           const lastDepositUTC = new Date(originalTimestamp);
           const daysSince = Math.floor((nowUTC - lastDepositUTC) / (1000 * 60 * 60 * 24));
           
-          // FIXED: Use the correct status calculation function
-          const status = calculatePlayerStatus(daysSince);
+          const status = player.status || "Inactive";
           
           const playerDeposits = depositData[playerName] || { total: 0, last7Days: 0 };
           
@@ -2644,7 +2617,7 @@
             lastDeposit: lastDepositDisplay,
             originalTimestamp: originalTimestamp,
             daysSince: daysSince,
-            status: status, // FIXED: Now using correct status
+            status: status,
             totalDeposit: playerDeposits.total,
             last7DaysDeposit: playerDeposits.last7Days,
             activityNotes: activityNotes,
@@ -2653,67 +2626,37 @@
           
           resultPlayers.push(playerData);
           
-          // FIXED: Check for Recent Active players (gap days logic)
           const recentActiveCheck = isRecentActiveOptimized(playerName, depositData);
           if (status === "Active" && recentActiveCheck.isRecentActive) {
             playerData.gapDays = recentActiveCheck.gapDays;
             recentActivePlayers.push(playerData);
           }
           
-          // FIXED: Check for Recent Inactive players (3-4.999 days)
           if (status === "Inactive" && daysSince >= RECENT_INACTIVE_MIN_DAYS && daysSince < RECENT_INACTIVE_MAX_DAYS) {
             recentInactivePlayers.push(playerData);
           }
-          
-          // FIXED: Check for High Risk players (5-14.999 days)
-          if (status === "Inactive" && daysSince >= HIGH_RISK_MIN_DAYS && daysSince < HIGH_RISK_MAX_DAYS) {
-            // Add to high risk players with proper data
-            highRiskPlayers.push({
-              player: playerName,
-              gaps: [{
-                gapDays: Math.floor(daysSince),
-                gapBetween: `Single gap from ${convertUTCToPKTDateOnly(originalTimestamp)} to today`
-              }],
-              totalQualifyingGaps: 1,
-              maxGapDays: Math.floor(daysSince),
-              lastDeposit: originalTimestamp,
-              daysSinceLastDeposit: Math.floor(daysSince),
-              currentStatus: status,
-              totalDeposits: playerDeposits.deposits ? playerDeposits.deposits.length : 1,
-              riskLevel: calculateRiskLevel(1, Math.floor(daysSince)),
-              depositType: "single",
-              hasNotes: playersWithNotes[playerName] || false
-            });
-          }
         });
 
-        // Get additional high risk players from the dedicated function
-        const additionalHighRiskData = await getHighRiskPlayers(pageName);
-        const additionalHighRiskPlayers = additionalHighRiskData.highRiskPlayers || [];
+        const highRiskData = await getHighRiskPlayers(pageName);
+        const highRiskPlayers = highRiskData.highRiskPlayers || [];
 
-        // Merge high risk players, avoiding duplicates
-        const allHighRiskPlayers = [...highRiskPlayers];
-        additionalHighRiskPlayers.forEach(newPlayer => {
-          if (!allHighRiskPlayers.some(existing => existing.player === newPlayer.player)) {
-            newPlayer.hasNotes = playersWithNotes[newPlayer.player] || false;
-            allHighRiskPlayers.push(newPlayer);
-          }
+        highRiskPlayers.forEach(player => {
+          player.hasNotes = playersWithNotes[player.player] || false;
         });
 
         // Sort by original timestamp
         resultPlayers.sort((a, b) => new Date(b.originalTimestamp) - new Date(a.originalTimestamp));
         recentActivePlayers.sort((a, b) => new Date(b.originalTimestamp) - new Date(a.originalTimestamp));
         recentInactivePlayers.sort((a, b) => new Date(b.originalTimestamp) - new Date(a.originalTimestamp));
-        allHighRiskPlayers.sort((a, b) => new Date(b.lastDeposit) - new Date(a.lastDeposit));
+        highRiskPlayers.sort((a, b) => new Date(b.lastDeposit) - new Date(a.lastDeposit));
 
-        // FIXED: Count calculations with correct thresholds
         const counts = {
           Total: resultPlayers.length,
           Active: resultPlayers.filter(p => p.status === "Active").length,
           Inactive: resultPlayers.filter(p => p.status === "Inactive" && p.daysSince >= INACTIVE_THRESHOLD).length,
           RecentActive: recentActivePlayers.length,
           RecentInactive: recentInactivePlayers.length,
-          HighRisk: allHighRiskPlayers.length
+          HighRisk: highRiskPlayers.length
         };
 
         return { 
@@ -2722,7 +2665,7 @@
           players: resultPlayers, 
           recentActivePlayers, 
           recentInactivePlayers,
-          highRiskPlayers: allHighRiskPlayers
+          highRiskPlayers: highRiskPlayers
         };
       } catch (error) {
         console.error('Error getting page activity:', error);
@@ -2797,7 +2740,7 @@
       const hoursSinceLatest = Math.floor((todayUTC - latest) / (1000 * 60 * 60));
       const daysSinceLatest = hoursSinceLatest / 24;
       
-      const isRecentActive = gapDays >= 3 && daysSinceLatest <= ACTIVE_MAX_DAYS;
+      const isRecentActive = gapDays >= 3 && daysSinceLatest <= DAYS_ACTIVE;
       
       return { 
         isRecentActive: isRecentActive, 
@@ -2971,7 +2914,7 @@
             const daysSinceSingleDeposit = hoursSinceSingleDeposit / 24;
             
             if (daysSinceSingleDeposit >= MIN_GAP_DAYS && daysSinceSingleDeposit < HIGH_RISK_MAX_DAYS) {
-              const currentStatus = daysSinceSingleDeposit <= ACTIVE_MAX_DAYS ? "Active" : "Inactive";
+              const currentStatus = daysSinceSingleDeposit <= DAYS_ACTIVE ? "Active" : "Inactive";
               
               highRiskPlayers.push({
                 player: player,
@@ -3028,7 +2971,7 @@
       }
       
       if (qualifyingGaps.length > 0) {
-        const currentStatus = daysSinceLastDeposit <= ACTIVE_MAX_DAYS ? "Active" : "Inactive";
+        const currentStatus = daysSinceLastDeposit <= DAYS_ACTIVE ? "Active" : "Inactive";
         const totalDepositCount = depositDates.reduce((sum, date) => sum + depositsByDay[date].count, 0);
         
         highRiskPlayers.push({
@@ -3113,8 +3056,7 @@ async function getEnhancedPlayerHistory(playerName, pageName) {
     const daysSince = hoursSince / 24;
     const remainingHours = hoursSince % 24;
     
-    // FIXED: Use the same status calculation logic
-    const currentStatus = calculatePlayerStatus(daysSince);
+    const currentStatus = daysSince <= DAYS_ACTIVE ? "Active" : "Inactive";
 
     let timeSinceDisplay = '';
     if (daysSince < 1) {
@@ -3194,6 +3136,14 @@ async function getEnhancedPlayerHistory(playerName, pageName) {
       currentDate.setDate(currentDate.getDate() + 1);
       currentDate.setUTCHours(0, 0, 0, 0);
     }
+
+    console.log(`Player ${playerName} timeline:`, {
+      firstDeposit: firstDepositDate.toISOString(),
+      lastDeposit: lastDepositDate.toISOString(),
+      todayPKT: todayPKT.toISOString(),
+      timelineDays: timeline.length,
+      depositsByDay: depositsByDay
+    });
 
     // Group consecutive days with same activity status
     let i = 0;
@@ -3423,6 +3373,8 @@ async function getPageDailyDeposits(pageName, monthOffset = 0) {
     const [year, month] = currentMonth.split('-').map(Number);
     const daysInMonth = getDaysInMonth(year, month);
     
+    console.log(`Month: ${currentMonth}, Year: ${year}, Month: ${month}, Days in month: ${daysInMonth}`);
+    
     // FIXED: Create dates in PKT timezone from the beginning
     const currentMonthStart = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
     const currentMonthEnd = new Date(Date.UTC(year, month - 1, daysInMonth, 23, 59, 59));
@@ -3454,6 +3406,13 @@ async function getPageDailyDeposits(pageName, monthOffset = 0) {
     
     // Start from the first day of the month in PKT
     let currentDate = new Date(currentMonthStart);
+    
+    // DEBUG: Log the date range we're generating
+    console.log(`Generating days for ${currentMonth}:`);
+    console.log(`Start (UTC): ${currentDate.toISOString()}`);
+    console.log(`End (UTC): ${actualEndDate.toISOString()}`);
+    console.log(`Days in month: ${daysInMonth}`);
+    console.log(`Is current month: ${isCurrentMonth}`);
     
     // FIXED: Generate dates using PKT-aware functions
     for (let day = 1; day <= daysInMonth; day++) {
@@ -3489,6 +3448,9 @@ const shouldInclude = isCurrentMonth ?
         }
       }
     }
+    
+    console.log(`Generated ${dailyDepositsArray.length} days for ${currentMonth}`);
+    console.log(`Available dates:`, dailyDepositsArray.map(d => d.displayDate));
     
     // Sort by date descending (newest first)
     dailyDepositsArray.sort((a, b) => b.timestamp - a.timestamp);
@@ -4221,7 +4183,7 @@ const shouldInclude = isCurrentMonth ?
           filtered = currentPageData.players.filter(p => p.status === "Active"); 
           break;
         case "Inactive": 
-          filtered = currentPageData.players.filter(p => p.status === "Inactive" && p.daysSince >= INACTIVE_THRESHOLD); 
+          filtered = currentPageData.players.filter(p => p.status === "Inactive" && p.daysSince >= 15); 
           break;
         case "RecentActive": 
           filtered = currentPageData.recentActivePlayers || []; 
@@ -4252,11 +4214,11 @@ const shouldInclude = isCurrentMonth ?
     function getTableTitle(type) {
       switch(type) {
         case "Total": return "All Players";
-        case "Active": return "Active Players (0-2 days 23 hrs 59 min)";
+        case "Active": return "Active Players (0-2 days)";
         case "Inactive": return "Inactive Players (15+ days)";
         case "RecentActive": return "Recent Active Players";
-        case "RecentInactive": return "Recent Inactive Players (3-4 days 23 hrs 59 min)";
-        case "HighRisk": return "High Risk Players Analysis (5-14 days 23 hrs 59 min)";
+        case "RecentInactive": return "Recent Inactive Players (3-4 days)";
+        case "HighRisk": return "High Risk Players Analysis";
         default: return "Players";
       }
     }
@@ -4608,6 +4570,10 @@ const shouldInclude = isCurrentMonth ?
           </thead>
           <tbody>
   `;
+
+  // DEBUG: Check what dates we actually have
+  console.log("Available dates:", data.dailyDeposits.map(d => d.displayDate));
+  console.log("Total days:", data.dailyDeposits.length);
 
   data.dailyDeposits.forEach(day => {
     let trendHtml = '-';
