@@ -61,7 +61,153 @@
       transition: all 0.3s ease;
     }
 
-    /* Landing Page */
+    /* ===== PIN AUTHENTICATION OVERLAY ===== */
+    #pinOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .pin-container {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 3rem;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      border: 1px solid var(--border-color);
+    }
+
+    .pin-logo {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    .pin-subtitle {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      font-weight: 400;
+    }
+
+    .pin-input-container {
+      position: relative;
+      margin-bottom: 2rem;
+    }
+
+    .pin-input {
+      width: 100%;
+      padding: 1.5rem;
+      font-size: 1.5rem;
+      text-align: center;
+      letter-spacing: 0.5rem;
+      border: 3px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .pin-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
+    }
+
+    .pin-keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .pin-key {
+      padding: 1.2rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pin-key:hover {
+      background: var(--primary);
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .pin-key:active {
+      transform: translateY(0);
+    }
+
+    .pin-key.clear {
+      background: var(--warning);
+      color: var(--dark);
+    }
+
+    .pin-key.enter {
+      background: var(--success);
+      color: white;
+      grid-column: span 2;
+    }
+
+    .pin-error {
+      color: var(--danger);
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      min-height: 1.5rem;
+      font-weight: 500;
+    }
+
+    .pin-attempts {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+    }
+
+    .pin-loading {
+      display: none;
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border-color);
+      border-left: 3px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 1rem auto;
+    }
+
+    .pin-success {
+      display: none;
+      color: var(--success);
+      font-size: 1.2rem;
+      margin: 1rem 0;
+    }
+
+    .pin-success i {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ===== EXISTING LANDING PAGE STYLES ===== */
     #landing {
       display: flex;
       flex-direction: column;
@@ -1254,6 +1400,10 @@
         padding: 2rem 1.5rem;
       }
       
+      .pin-container {
+        padding: 2rem 1.5rem;
+      }
+      
       .dashboard-content {
         padding: 1rem;
       }
@@ -1312,6 +1462,52 @@
 </head>
 
 <body>
+  <!-- ===== PIN AUTHENTICATION OVERLAY ===== -->
+  <div id="pinOverlay">
+    <div class="pin-container">
+      <div class="pin-logo">
+        <i class="fas fa-chart-line"></i> Tech Pulse
+      </div>
+      <p class="pin-subtitle">Marketing Department Analytics Dashboard</p>
+      
+      <div class="pin-input-container">
+        <input type="password" 
+               id="pinInput" 
+               class="pin-input" 
+               maxlength="6" 
+               placeholder="••••••"
+               autocomplete="off"
+               readonly>
+      </div>
+      
+      <div class="pin-keypad">
+        <button class="pin-key" data-key="1">1</button>
+        <button class="pin-key" data-key="2">2</button>
+        <button class="pin-key" data-key="3">3</button>
+        <button class="pin-key" data-key="4">4</button>
+        <button class="pin-key" data-key="5">5</button>
+        <button class="pin-key" data-key="6">6</button>
+        <button class="pin-key" data-key="7">7</button>
+        <button class="pin-key" data-key="8">8</button>
+        <button class="pin-key" data-key="9">9</button>
+        <button class="pin-key clear" id="pinClear">Clear</button>
+        <button class="pin-key" data-key="0">0</button>
+        <button class="pin-key enter" id="pinEnter">Enter</button>
+      </div>
+      
+      <div id="pinLoading" class="pin-loading"></div>
+      <div id="pinSuccess" class="pin-success">
+        <i class="fas fa-check-circle"></i><br>
+        Access Granted
+      </div>
+      
+      <div id="pinError" class="pin-error"></div>
+      <div id="pinAttempts" class="pin-attempts">
+        Attempts: <span id="attemptCount">0</span>/5
+      </div>
+    </div>
+  </div>
+
   <!-- Landing Page -->
   <div id="landing">
     <div class="landing-container">
@@ -1486,6 +1682,20 @@
 
   <script>
     // =============================================
+    // PIN AUTHENTICATION SYSTEM
+    // =============================================
+    const SITE_PIN = "127432"; // Your PIN
+    const MAX_ATTEMPTS = 5;
+    const PIN_STORAGE_KEY = "pin_verified";
+    const PIN_ATTEMPTS_KEY = "pin_attempts";
+    const PIN_LOCKOUT_KEY = "pin_lockout";
+
+    // PIN Authentication State
+    let pinAttempts = 0;
+    let isLockedOut = false;
+    let lockoutUntil = 0;
+
+    // =============================================
     // SUPABASE CONFIGURATION
     // =============================================
     const SUPABASE_URL = "https://bwbusaawmalgfhcwdryq.supabase.co";
@@ -1607,6 +1817,219 @@
       "egames": "E-Games",
       "big winner": "Big Winner"
     };
+
+    // =============================================
+    // PIN AUTHENTICATION FUNCTIONS
+    // =============================================
+
+    function initializePinAuth() {
+      // Check for lockout
+      checkLockoutStatus();
+      
+      // Check if already verified in this session
+      if (sessionStorage.getItem(PIN_STORAGE_KEY) === 'true') {
+        hidePinOverlay();
+        return;
+      }
+      
+      // Show PIN overlay
+      showPinOverlay();
+      setupPinKeypad();
+    }
+
+    function checkLockoutStatus() {
+      const lockoutData = localStorage.getItem(PIN_LOCKOUT_KEY);
+      if (lockoutData) {
+        const { timestamp } = JSON.parse(lockoutData);
+        const now = Date.now();
+        const lockoutDuration = 15 * 60 * 1000; // 15 minutes
+        
+        if (now - timestamp < lockoutDuration) {
+          isLockedOut = true;
+          lockoutUntil = timestamp + lockoutDuration;
+          showPinError(`Too many attempts. Try again in ${Math.ceil((lockoutUntil - now) / 60000)} minutes.`);
+          disablePinInput();
+        }
+      }
+      
+      // Load attempt count
+      const attemptsData = localStorage.getItem(PIN_ATTEMPTS_KEY);
+      if (attemptsData) {
+        pinAttempts = parseInt(attemptsData) || 0;
+        updateAttemptsDisplay();
+      }
+    }
+
+    function showPinOverlay() {
+      document.getElementById('pinOverlay').style.display = 'flex';
+      document.getElementById('landing').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'none';
+    }
+
+    function hidePinOverlay() {
+      document.getElementById('pinOverlay').style.display = 'none';
+      document.getElementById('landing').style.display = 'flex';
+      clearPinInput();
+      hidePinError();
+    }
+
+    function setupPinKeypad() {
+      // Number keys
+      document.querySelectorAll('.pin-key[data-key]').forEach(button => {
+        button.addEventListener('click', () => {
+          if (isLockedOut) return;
+          const key = button.getAttribute('data-key');
+          addPinDigit(key);
+        });
+      });
+      
+      // Clear button
+      document.getElementById('pinClear').addEventListener('click', clearPinInput);
+      
+      // Enter button
+      document.getElementById('pinEnter').addEventListener('click', validatePin);
+      
+      // Allow keyboard input
+      document.getElementById('pinInput').addEventListener('keydown', (e) => {
+        if (e.key >= '0' && e.key <= '9') {
+          addPinDigit(e.key);
+        } else if (e.key === 'Enter') {
+          validatePin();
+        } else if (e.key === 'Backspace' || e.key === 'Delete') {
+          clearPinInput();
+        }
+        e.preventDefault();
+      });
+      
+      // Focus on input
+      document.getElementById('pinInput').focus();
+    }
+
+    function addPinDigit(digit) {
+      if (isLockedOut) return;
+      
+      const input = document.getElementById('pinInput');
+      if (input.value.length < 6) {
+        input.value += digit;
+        updatePinDisplay();
+      }
+    }
+
+    function clearPinInput() {
+      if (isLockedOut) return;
+      
+      document.getElementById('pinInput').value = '';
+      updatePinDisplay();
+      hidePinError();
+    }
+
+    function updatePinDisplay() {
+      const input = document.getElementById('pinInput');
+      // The dots are already shown via placeholder
+    }
+
+    function validatePin() {
+      if (isLockedOut) return;
+      
+      const input = document.getElementById('pinInput');
+      const enteredPin = input.value;
+      
+      if (enteredPin.length !== 6) {
+        showPinError('PIN must be 6 digits');
+        return;
+      }
+      
+      // Show loading
+      showPinLoading(true);
+      
+      // Simulate network delay for security
+      setTimeout(() => {
+        if (enteredPin === SITE_PIN) {
+          // Success
+          pinAttempts = 0;
+          localStorage.removeItem(PIN_ATTEMPTS_KEY);
+          localStorage.removeItem(PIN_LOCKOUT_KEY);
+          
+          sessionStorage.setItem(PIN_STORAGE_KEY, 'true');
+          
+          showPinSuccess();
+          
+          // Hide PIN overlay after success animation
+          setTimeout(() => {
+            hidePinOverlay();
+            showPinLoading(false);
+            hidePinSuccess();
+          }, 1000);
+          
+        } else {
+          // Failed attempt
+          pinAttempts++;
+          localStorage.setItem(PIN_ATTEMPTS_KEY, pinAttempts.toString());
+          
+          if (pinAttempts >= MAX_ATTEMPTS) {
+            // Lockout
+            isLockedOut = true;
+            const lockoutData = {
+              timestamp: Date.now()
+            };
+            localStorage.setItem(PIN_LOCKOUT_KEY, JSON.stringify(lockoutData));
+            showPinError(`Too many attempts. Try again in 15 minutes.`);
+            disablePinInput();
+          } else {
+            showPinError(`Invalid PIN. ${MAX_ATTEMPTS - pinAttempts} attempt(s) remaining.`);
+            clearPinInput();
+          }
+          
+          updateAttemptsDisplay();
+          showPinLoading(false);
+        }
+      }, 500);
+    }
+
+    function showPinLoading(show) {
+      document.getElementById('pinLoading').style.display = show ? 'block' : 'none';
+    }
+
+    function showPinSuccess() {
+      document.getElementById('pinSuccess').style.display = 'block';
+    }
+
+    function hidePinSuccess() {
+      document.getElementById('pinSuccess').style.display = 'none';
+    }
+
+    function showPinError(message) {
+      const errorEl = document.getElementById('pinError');
+      errorEl.textContent = message;
+      errorEl.style.display = 'block';
+    }
+
+    function hidePinError() {
+      document.getElementById('pinError').style.display = 'none';
+      document.getElementById('pinError').textContent = '';
+    }
+
+    function updateAttemptsDisplay() {
+      document.getElementById('attemptCount').textContent = pinAttempts;
+    }
+
+    function disablePinInput() {
+      document.getElementById('pinInput').disabled = true;
+      document.querySelectorAll('.pin-key').forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      });
+    }
+
+    function enablePinInput() {
+      document.getElementById('pinInput').disabled = false;
+      document.querySelectorAll('.pin-key').forEach(btn => {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+      });
+    }
 
     // =============================================
     // TIME CONVERSION UTILITIES - FIXED FOR PAKISTAN TIME
@@ -2308,71 +2731,71 @@
             return;
           }
           
-          const allGaps = [];
-          const qualifyingGaps = [];
-          
-          for (let i = 0; i < deposits.length - 1; i++) {
-            const currentDeposit = deposits[i];
-            const nextDeposit = deposits[i + 1];
-            const gapHours = Math.floor((nextDeposit - currentDeposit) / (1000 * 60 * 60));
-            const gapDays = gapHours / 24;
-            allGaps.push(gapDays);
-            
-            if (gapDays >= MIN_GAP_DAYS && gapDays < HIGH_RISK_MAX_DAYS) {
-              qualifyingGaps.push({
-                gapDays: Math.floor(gapDays),
-                gapBetween: `${convertUTCToPKTDateOnly(currentDeposit.toISOString())} to ${convertUTCToPKTDateOnly(nextDeposit.toISOString())}`
-              });
-            }
-          }
-          
-          const lastDepositDate = deposits[deposits.length - 1];
-          const hoursSinceLastDeposit = Math.floor((todayUTC - lastDepositDate) / (1000 * 60 * 60));
-          const daysSinceLastDeposit = hoursSinceLastDeposit / 24;
-          
-          if (daysSinceLastDeposit >= MIN_GAP_DAYS && daysSinceLastDeposit < HIGH_RISK_MAX_DAYS) {
-            qualifyingGaps.push({
-              gapDays: Math.floor(daysSinceLastDeposit),
-              gapBetween: `${convertUTCToPKTDateOnly(lastDepositDate.toISOString())} to today`
-            });
-            allGaps.push(daysSinceLastDeposit);
-          }
-          
-          const hasExcessiveGap = allGaps.some(gap => gap >= HIGH_RISK_MAX_DAYS);
-          if (hasExcessiveGap) {
-            return;
-          }
-          
-          if (qualifyingGaps.length > 0) {
-            const currentStatus = daysSinceLastDeposit <= DAYS_ACTIVE ? "Active" : "Inactive";
-            const totalDepositCount = depositDates.reduce((sum, date) => sum + depositsByDay[date].count, 0);
-            
-            highRiskPlayers.push({
-              player: player,
-              gaps: qualifyingGaps,
-              totalQualifyingGaps: qualifyingGaps.length,
-              maxGapDays: Math.max(...qualifyingGaps.map(gap => gap.gapDays)),
-              lastDeposit: lastDepositDate.toISOString(),
-              daysSinceLastDeposit: Math.floor(daysSinceLastDeposit),
-              currentStatus: currentStatus,
-              totalDeposits: totalDepositCount,
-              riskLevel: calculateRiskLevel(qualifyingGaps.length, Math.max(...qualifyingGaps.map(gap => gap.gapDays))),
-              depositType: "multiple"
-            });
-          }
-        });
-
-        highRiskPlayers.sort((a, b) => new Date(b.lastDeposit) - new Date(a.lastDeposit));
-
-        return {
-          highRiskPlayers: highRiskPlayers,
-          message: `Found ${highRiskPlayers.length} high risk players`
-        };
-      } catch (error) {
-        console.error('Error getting high risk players:', error);
-        return { highRiskPlayers: [], message: "Error loading high risk players" };
+      const allGaps = [];
+      const qualifyingGaps = [];
+      
+      for (let i = 0; i < deposits.length - 1; i++) {
+        const currentDeposit = deposits[i];
+        const nextDeposit = deposits[i + 1];
+        const gapHours = Math.floor((nextDeposit - currentDeposit) / (1000 * 60 * 60));
+        const gapDays = gapHours / 24;
+        allGaps.push(gapDays);
+        
+        if (gapDays >= MIN_GAP_DAYS && gapDays < HIGH_RISK_MAX_DAYS) {
+          qualifyingGaps.push({
+            gapDays: Math.floor(gapDays),
+            gapBetween: `${convertUTCToPKTDateOnly(currentDeposit.toISOString())} to ${convertUTCToPKTDateOnly(nextDeposit.toISOString())}`
+          });
+        }
       }
-    }
+      
+      const lastDepositDate = deposits[deposits.length - 1];
+      const hoursSinceLastDeposit = Math.floor((todayUTC - lastDepositDate) / (1000 * 60 * 60));
+      const daysSinceLastDeposit = hoursSinceLastDeposit / 24;
+      
+      if (daysSinceLastDeposit >= MIN_GAP_DAYS && daysSinceLastDeposit < HIGH_RISK_MAX_DAYS) {
+        qualifyingGaps.push({
+          gapDays: Math.floor(daysSinceLastDeposit),
+          gapBetween: `${convertUTCToPKTDateOnly(lastDepositDate.toISOString())} to today`
+        });
+        allGaps.push(daysSinceLastDeposit);
+      }
+      
+      const hasExcessiveGap = allGaps.some(gap => gap >= HIGH_RISK_MAX_DAYS);
+      if (hasExcessiveGap) {
+        return;
+      }
+      
+      if (qualifyingGaps.length > 0) {
+        const currentStatus = daysSinceLastDeposit <= DAYS_ACTIVE ? "Active" : "Inactive";
+        const totalDepositCount = depositDates.reduce((sum, date) => sum + depositsByDay[date].count, 0);
+        
+        highRiskPlayers.push({
+          player: player,
+          gaps: qualifyingGaps,
+          totalQualifyingGaps: qualifyingGaps.length,
+          maxGapDays: Math.max(...qualifyingGaps.map(gap => gap.gapDays)),
+          lastDeposit: lastDepositDate.toISOString(),
+          daysSinceLastDeposit: Math.floor(daysSinceLastDeposit),
+          currentStatus: currentStatus,
+          totalDeposits: totalDepositCount,
+          riskLevel: calculateRiskLevel(qualifyingGaps.length, Math.max(...qualifyingGaps.map(gap => gap.gapDays))),
+          depositType: "multiple"
+        });
+      }
+    });
+
+    highRiskPlayers.sort((a, b) => new Date(b.lastDeposit) - new Date(a.lastDeposit));
+
+    return {
+      highRiskPlayers: highRiskPlayers,
+      message: `Found ${highRiskPlayers.length} high risk players`
+    };
+  } catch (error) {
+    console.error('Error getting high risk players:', error);
+    return { highRiskPlayers: [], message: "Error loading high risk players" };
+  }
+}
 
     // FIXED: Enhanced Player History Function with proper PKT timezone handling
 async function getEnhancedPlayerHistory(playerName, pageName) {
@@ -2934,6 +3357,9 @@ const shouldInclude = isCurrentMonth ?
     });
 
     function initializeApp() {
+      // First, check PIN authentication
+      initializePinAuth();
+      
       const savedPage = sessionStorage.getItem('currentPage');
       const savedView = sessionStorage.getItem('currentView');
       
@@ -2942,7 +3368,7 @@ const shouldInclude = isCurrentMonth ?
       
       navigationContext = 'landing';
       
-      if (savedPage) {
+      if (savedPage && sessionStorage.getItem(PIN_STORAGE_KEY) === 'true') {
         selectedPage = savedPage;
         const pageObj = PAGES.find(p => p.name === savedPage);
         if (pageObj) {
@@ -2973,6 +3399,12 @@ const shouldInclude = isCurrentMonth ?
     }
 
     function loadDashboard(pageObj) {
+      // Check PIN authentication first
+      if (sessionStorage.getItem(PIN_STORAGE_KEY) !== 'true') {
+        initializePinAuth();
+        return;
+      }
+      
       selectedPage = pageObj.name;
       currentPageObj = pageObj;
       sessionStorage.setItem('currentPage', selectedPage);
@@ -3195,6 +3627,12 @@ const shouldInclude = isCurrentMonth ?
     });
 
     async function showEnhancedGlobalPlayerHistory(playerName, pageName) {
+      // Check PIN authentication first
+      if (sessionStorage.getItem(PIN_STORAGE_KEY) !== 'true') {
+        initializePinAuth();
+        return;
+      }
+      
       document.getElementById('landing').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
       
@@ -3310,6 +3748,12 @@ const shouldInclude = isCurrentMonth ?
     }
 
     function findData() {
+      // Check PIN authentication first
+      if (sessionStorage.getItem(PIN_STORAGE_KEY) !== 'true') {
+        initializePinAuth();
+        return;
+      }
+      
       const val = searchInput.value.trim();
       const pageObj = PAGES.find(p => p.name.toLowerCase() === val.toLowerCase());
       
@@ -4420,6 +4864,8 @@ const shouldInclude = isCurrentMonth ?
     }
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', detectTheme);
+    
+    // Initialize theme and app
     detectTheme();
   </script>
 </body>
