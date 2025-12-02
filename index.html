@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tech Pulse Analytics | Secure Access</title>
+  <title>Tracking Software</title>
   <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/8695/8695383.png">
   <base target="_top">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -59,308 +59,8 @@
       min-height: 100vh;
       line-height: 1.6;
       transition: all 0.3s ease;
-      overflow-x: hidden;
     }
 
-    /* === PIN AUTHENTICATION SCREEN === */
-    #pinAuth {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 2rem;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 9999;
-    }
-
-    .pin-auth-container {
-      background: var(--bg-card);
-      border-radius: 20px;
-      padding: 3rem;
-      box-shadow: var(--shadow-lg);
-      text-align: center;
-      max-width: 420px;
-      width: 100%;
-      border: 1px solid var(--border-color);
-      animation: slideUp 0.5s ease;
-    }
-
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .pin-logo {
-      font-size: 2.5rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.75rem;
-    }
-
-    .pin-subtitle {
-      color: var(--text-secondary);
-      font-size: 1rem;
-      margin-bottom: 2rem;
-      font-weight: 400;
-    }
-
-    .pin-input-container {
-      margin-bottom: 1.5rem;
-      position: relative;
-    }
-
-    .pin-input {
-      width: 100%;
-      padding: 1rem 1.5rem;
-      font-size: 1.5rem;
-      letter-spacing: 0.5rem;
-      text-align: center;
-      border: 2px solid var(--border-color);
-      border-radius: 12px;
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      font-weight: 600;
-      transition: all 0.3s ease;
-    }
-
-    .pin-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
-    }
-
-    .pin-input.shake {
-      animation: shake 0.5s ease-in-out;
-      border-color: var(--danger);
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-      20%, 40%, 60%, 80% { transform: translateX(5px); }
-    }
-
-    .pin-dots {
-      display: flex;
-      justify-content: center;
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .pin-dot {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: var(--border-color);
-      transition: all 0.3s ease;
-    }
-
-    .pin-dot.filled {
-      background: var(--primary);
-      transform: scale(1.2);
-    }
-
-    .pin-feedback {
-      min-height: 24px;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      font-size: 0.9rem;
-    }
-
-    .pin-feedback.success {
-      color: var(--success);
-    }
-
-    .pin-feedback.error {
-      color: var(--danger);
-    }
-
-    .pin-feedback.warning {
-      color: var(--warning);
-    }
-
-    .pin-feedback.info {
-      color: var(--info);
-    }
-
-    .attempts-counter {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: var(--bg-secondary);
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      margin-bottom: 1rem;
-    }
-
-    .attempts-counter .remaining {
-      font-weight: 700;
-      color: var(--primary);
-    }
-
-    .btn {
-      padding: 1rem 2rem;
-      border: none;
-      border-radius: 12px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-      transition: left 0.5s ease;
-    }
-
-    .btn:hover::before {
-      left: 100%;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      box-shadow: var(--shadow);
-      width: 100%;
-      justify-content: center;
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none !important;
-      pointer-events: none;
-    }
-
-    /* Lock Screen Styles */
-    .lock-screen {
-      text-align: center;
-      padding: 1.5rem 0;
-    }
-
-    .lock-icon {
-      font-size: 3rem;
-      color: var(--danger);
-      margin-bottom: 1rem;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-
-    .countdown-timer {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--danger);
-      margin: 1rem 0;
-      font-family: 'Inter', monospace;
-    }
-
-    .countdown-message {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .lock-message {
-      background: rgba(239, 71, 111, 0.1);
-      padding: 1rem;
-      border-radius: 12px;
-      border-left: 4px solid var(--danger);
-      margin-bottom: 1.5rem;
-    }
-
-    .role-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-top: 1rem;
-    }
-
-    .role-badge.admin {
-      background: rgba(67, 97, 238, 0.1);
-      color: var(--primary);
-      border: 1px solid rgba(67, 97, 238, 0.3);
-    }
-
-    .role-badge.viewer {
-      background: rgba(6, 214, 160, 0.1);
-      color: var(--success);
-      border: 1px solid rgba(6, 214, 160, 0.3);
-    }
-
-    .pin-instructions {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border-color);
-    }
-
-    /* Loading Spinner for PIN Verification */
-    .pin-spinner {
-      display: none;
-      width: 20px;
-      height: 20px;
-      border: 3px solid var(--border-color);
-      border-left: 3px solid var(--primary);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* === ALL YOUR EXISTING DASHBOARD CSS (KEEP EVERYTHING BELOW AS IS) === */
     /* Landing Page */
     #landing {
       display: flex;
@@ -500,6 +200,86 @@
       font-size: 0.7rem;
       font-weight: 500;
       white-space: nowrap;
+    }
+
+    .btn {
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: var(--shadow);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Enhanced disabled button styles */
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      pointer-events: none;
+    }
+
+    .btn:disabled:hover::before {
+      left: -100%;
+    }
+
+    .btn-primary:disabled {
+      background: #94a3b8;
+      color: #cbd5e1;
+    }
+
+    .btn-secondary:disabled {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border-color: var(--border-color);
+    }
+
+    .btn-success:disabled {
+      background: #a7f3d0;
+      color: #065f46;
+    }
+
+    .btn-warning:disabled {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .btn-danger:disabled {
+      background: #fecaca;
+      color: #991b1b;
     }
 
     .btn-secondary {
@@ -1227,6 +1007,11 @@
       margin: 0 auto 1rem;
     }
 
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     .loading-progress {
       margin-top: 1rem;
       color: var(--text-secondary);
@@ -1469,11 +1254,6 @@
         padding: 2rem 1.5rem;
       }
       
-      .pin-auth-container {
-        padding: 2rem 1.5rem;
-        max-width: 350px;
-      }
-      
       .dashboard-content {
         padding: 1rem;
       }
@@ -1528,89 +1308,10 @@
         padding: 0.5rem 0.5rem;
       }
     }
-
-    @media (max-width: 480px) {
-      .pin-auth-container {
-        padding: 1.5rem;
-        margin: 1rem;
-      }
-      
-      .pin-input {
-        font-size: 1.25rem;
-        padding: 0.75rem;
-      }
-      
-      .countdown-timer {
-        font-size: 1.5rem;
-      }
-    }
   </style>
 </head>
 
 <body>
-  <!-- PIN Authentication Screen -->
-  <div id="pinAuth">
-    <div class="pin-auth-container">
-      <div class="pin-logo">
-        <i class="fas fa-chart-line"></i> Tech Pulse
-      </div>
-      <p class="pin-subtitle">Analytics Dashboard - Secure Access</p>
-      
-      <div id="pinEntry">
-        <div class="pin-input-container">
-          <input type="password" 
-                 id="pinInput" 
-                 class="pin-input" 
-                 placeholder="Enter 6-digit PIN" 
-                 maxlength="6" 
-                 inputmode="numeric" 
-                 autocomplete="off"
-                 autofocus>
-        </div>
-        
-        <div class="pin-dots" id="pinDots">
-          <div class="pin-dot"></div>
-          <div class="pin-dot"></div>
-          <div class="pin-dot"></div>
-          <div class="pin-dot"></div>
-          <div class="pin-dot"></div>
-          <div class="pin-dot"></div>
-        </div>
-        
-        <div class="pin-feedback" id="pinFeedback"></div>
-        
-        <div class="attempts-counter" id="attemptsCounter" style="display: none;">
-          <i class="fas fa-shield-alt"></i>
-          Attempts left: <span class="remaining" id="remainingAttempts">3</span>
-        </div>
-        
-        <button id="submitPinBtn" class="btn btn-primary">
-          <span id="submitText">Access Dashboard</span>
-          <div class="pin-spinner" id="pinSpinner"></div>
-        </button>
-        
-        <div class="pin-instructions">
-          <i class="fas fa-info-circle"></i> Enter 6-digit PIN provided by administrator
-        </div>
-      </div>
-      
-      <div id="lockScreen" class="lock-screen" style="display: none;">
-        <div class="lock-icon">
-          <i class="fas fa-lock"></i>
-        </div>
-        <div class="lock-message">
-          <p><strong>Too many incorrect attempts</strong></p>
-          <p>Please wait before trying again</p>
-        </div>
-        <div class="countdown-timer" id="countdownTimer">10:00</div>
-        <p class="countdown-message">You can try again in:</p>
-        <div class="pin-instructions">
-          <i class="fas fa-phone"></i> Contact administrator if you're locked out
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Landing Page -->
   <div id="landing">
     <div class="landing-container">
@@ -1653,10 +1354,7 @@
   <div id="dashboard">
     <header class="dashboard-header">
       <div class="header-content">
-        <div>
-          <h1 class="page-title" id="pageTitle"></h1>
-          <div id="userRoleBadge" style="display: none;"></div>
-        </div>
+        <h1 class="page-title" id="pageTitle"></h1>
         <div class="control-buttons">
           <button id="changePageBtn" class="btn btn-secondary" onclick="backToLanding()">
             <i class="fas fa-exchange-alt"></i> Change Page
@@ -1787,407 +1485,6 @@
   </div>
 
   <script>
-  // =============================================
-  // PIN AUTHENTICATION SYSTEM
-  // =============================================
-  
-  // PINs from Vercel Environment Variables or fallback
-  // In production, Vite will replace these during build
-  const ADMIN_PIN = "234721";  // Will be replaced by VITE_ADMIN_PIN from env
-  const VIEWER_PIN = "815252"; // Will be replaced by VITE_VIEWER_PIN from env
-  
-  // Authentication state
-  const authState = {
-    currentRole: null,
-    attempts: 0,
-    maxAttempts: 3,
-    lockDuration: 10 * 60 * 1000, // 10 minutes in milliseconds
-    isLocked: false,
-    lockUntil: null,
-    lastAttemptTime: null
-  };
-  
-  // DOM Elements for PIN System
-  const pinAuth = document.getElementById('pinAuth');
-  const pinInput = document.getElementById('pinInput');
-  const pinDots = document.getElementById('pinDots');
-  const pinFeedback = document.getElementById('pinFeedback');
-  const attemptsCounter = document.getElementById('attemptsCounter');
-  const remainingAttempts = document.getElementById('remainingAttempts');
-  const submitPinBtn = document.getElementById('submitPinBtn');
-  const submitText = document.getElementById('submitText');
-  const pinSpinner = document.getElementById('pinSpinner');
-  const lockScreen = document.getElementById('lockScreen');
-  const countdownTimer = document.getElementById('countdownTimer');
-  const pinEntry = document.getElementById('pinEntry');
-  const userRoleBadge = document.getElementById('userRoleBadge');
-  
-  // =============================================
-  // PIN SYSTEM FUNCTIONS
-  // =============================================
-  
-  function initializeAuth() {
-    loadAuthState();
-    checkLockStatus();
-    setupPinInputListeners();
-    updatePinDots();
-    
-    // Focus on PIN input
-    setTimeout(() => {
-      pinInput.focus();
-    }, 100);
-  }
-  
-  function loadAuthState() {
-    try {
-      const savedState = localStorage.getItem('auth_state');
-      if (savedState) {
-        const parsed = JSON.parse(savedState);
-        authState.attempts = parsed.attempts || 0;
-        authState.isLocked = parsed.isLocked || false;
-        authState.lockUntil = parsed.lockUntil ? new Date(parsed.lockUntil) : null;
-        authState.lastAttemptTime = parsed.lastAttemptTime ? new Date(parsed.lastAttemptTime) : null;
-      }
-      
-      // Check current role
-      const role = sessionStorage.getItem('user_role');
-      const verified = sessionStorage.getItem('pin_verified');
-      
-      if (role && verified === 'true') {
-        authState.currentRole = role;
-        // If already authenticated, skip PIN screen
-        grantAccess(role);
-      }
-    } catch (error) {
-      console.error('Error loading auth state:', error);
-      resetAuthState();
-    }
-  }
-  
-  function saveAuthState() {
-    try {
-      localStorage.setItem('auth_state', JSON.stringify({
-        attempts: authState.attempts,
-        isLocked: authState.isLocked,
-        lockUntil: authState.lockUntil,
-        lastAttemptTime: authState.lastAttemptTime
-      }));
-    } catch (error) {
-      console.error('Error saving auth state:', error);
-    }
-  }
-  
-  function resetAuthState() {
-    authState.attempts = 0;
-    authState.isLocked = false;
-    authState.lockUntil = null;
-    authState.lastAttemptTime = null;
-    saveAuthState();
-  }
-  
-  function checkLockStatus() {
-    if (!authState.isLocked || !authState.lockUntil) return;
-    
-    const now = new Date();
-    if (now < authState.lockUntil) {
-      // Still locked, show lock screen
-      showLockScreen();
-      startCountdown();
-    } else {
-      // Lock expired
-      authState.isLocked = false;
-      authState.attempts = 0;
-      authState.lockUntil = null;
-      saveAuthState();
-      showPinEntry();
-    }
-  }
-  
-  function setupPinInputListeners() {
-    pinInput.addEventListener('input', function() {
-      const value = this.value.replace(/\D/g, ''); // Remove non-digits
-      this.value = value.substring(0, 6); // Limit to 6 digits
-      updatePinDots();
-      
-      // Auto-submit when 6 digits entered
-      if (value.length === 6) {
-        setTimeout(verifyPin, 100);
-      }
-    });
-    
-    pinInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && this.value.length === 6) {
-        verifyPin();
-      }
-      
-      // Allow backspace and delete
-      if (e.key === 'Backspace' || e.key === 'Delete') {
-        setTimeout(updatePinDots, 0);
-      }
-    });
-    
-    submitPinBtn.addEventListener('click', verifyPin);
-    
-    // Prevent paste to avoid cheating
-    pinInput.addEventListener('paste', function(e) {
-      e.preventDefault();
-      showFeedback('Paste is disabled for security', 'error');
-    });
-  }
-  
-  function updatePinDots() {
-    const dots = pinDots.querySelectorAll('.pin-dot');
-    const value = pinInput.value;
-    
-    dots.forEach((dot, index) => {
-      if (index < value.length) {
-        dot.classList.add('filled');
-      } else {
-        dot.classList.remove('filled');
-      }
-    });
-  }
-  
-  function verifyPin() {
-    if (authState.isLocked) return;
-    
-    const pin = pinInput.value;
-    if (pin.length !== 6) {
-      showFeedback('Please enter 6-digit PIN', 'error');
-      shakeInput();
-      return;
-    }
-    
-    // Check rate limiting (30 seconds between attempts after 1st wrong)
-    if (authState.attempts > 0 && authState.lastAttemptTime) {
-      const now = new Date();
-      const timeSinceLastAttempt = now - authState.lastAttemptTime;
-      const minWaitTime = 30 * 1000; // 30 seconds
-      
-      if (timeSinceLastAttempt < minWaitTime) {
-        const waitSeconds = Math.ceil((minWaitTime - timeSinceLastAttempt) / 1000);
-        showFeedback(`Please wait ${waitSeconds} seconds before trying again`, 'warning');
-        return;
-      }
-    }
-    
-    // Show loading state
-    submitText.textContent = 'Verifying...';
-    pinSpinner.style.display = 'block';
-    submitPinBtn.disabled = true;
-    
-    // Simulate network delay for better UX
-    setTimeout(() => {
-      processPinVerification(pin);
-    }, 800);
-  }
-  
-  function processPinVerification(pin) {
-    let role = null;
-    
-    // Check PINs (in production, these come from Vercel env vars)
-    if (pin === ADMIN_PIN) {
-      role = 'admin';
-    } else if (pin === VIEWER_PIN) {
-      role = 'viewer';
-    }
-    
-    if (role) {
-      // Successful authentication
-      authState.attempts = 0;
-      authState.lastAttemptTime = new Date();
-      saveAuthState();
-      
-      showFeedback(`Access granted as ${role === 'admin' ? 'Administrator' : 'Viewer'}`, 'success');
-      setTimeout(() => {
-        grantAccess(role);
-      }, 1000);
-    } else {
-      // Failed authentication
-      authState.attempts++;
-      authState.lastAttemptTime = new Date();
-      
-      if (authState.attempts >= authState.maxAttempts) {
-        // Lock user out
-        authState.isLocked = true;
-        authState.lockUntil = new Date(Date.now() + authState.lockDuration);
-        saveAuthState();
-        
-        showLockScreen();
-        startCountdown();
-        showFeedback('Too many incorrect attempts. Account locked for 10 minutes.', 'error');
-      } else {
-        const remaining = authState.maxAttempts - authState.attempts;
-        showFeedback(`Incorrect PIN. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`, 'error');
-        shakeInput();
-        updateAttemptsCounter();
-        saveAuthState();
-      }
-      
-      // Reset UI
-      resetPinInput();
-    }
-    
-    // Reset button state
-    submitText.textContent = 'Access Dashboard';
-    pinSpinner.style.display = 'none';
-    submitPinBtn.disabled = false;
-  }
-  
-  function grantAccess(role) {
-    // Store authentication state
-    sessionStorage.setItem('user_role', role);
-    sessionStorage.setItem('pin_verified', 'true');
-    authState.currentRole = role;
-    
-    // Update UI based on role
-    updateUIForRole(role);
-    
-    // Hide PIN screen, show landing page
-    pinAuth.style.display = 'none';
-    document.getElementById('landing').style.display = 'flex';
-    
-    // Show role badge
-    showRoleBadge(role);
-  }
-  
-  function updateUIForRole(role) {
-    // This will be used later to disable features for viewers
-    console.log(`User logged in as: ${role}`);
-    
-    if (role === 'viewer') {
-      // Disable sensitive operations for viewers
-      document.getElementById('refreshDataBtn').style.display = 'none';
-      document.getElementById('forceCleanupBtn').style.display = 'none';
-      
-      // Note: We'll also disable note buttons in the main code
-    }
-  }
-  
-  function showRoleBadge(role) {
-    if (role === 'admin') {
-      userRoleBadge.innerHTML = `
-        <div class="role-badge admin">
-          <i class="fas fa-user-shield"></i> Administrator Mode
-        </div>
-      `;
-    } else if (role === 'viewer') {
-      userRoleBadge.innerHTML = `
-        <div class="role-badge viewer">
-          <i class="fas fa-eye"></i> View-Only Mode
-        </div>
-      `;
-    }
-    userRoleBadge.style.display = 'block';
-  }
-  
-  function showLockScreen() {
-    pinEntry.style.display = 'none';
-    lockScreen.style.display = 'block';
-    pinInput.disabled = true;
-    submitPinBtn.disabled = true;
-  }
-  
-  function showPinEntry() {
-    pinEntry.style.display = 'block';
-    lockScreen.style.display = 'none';
-    pinInput.disabled = false;
-    submitPinBtn.disabled = false;
-    resetPinInput();
-    updateAttemptsCounter();
-  }
-  
-  function startCountdown() {
-    const updateTimer = () => {
-      if (!authState.isLocked || !authState.lockUntil) {
-        countdownTimer.textContent = '00:00';
-        return;
-      }
-      
-      const now = new Date();
-      const remaining = authState.lockUntil - now;
-      
-      if (remaining <= 0) {
-        // Lock expired
-        authState.isLocked = false;
-        authState.attempts = 0;
-        authState.lockUntil = null;
-        saveAuthState();
-        showPinEntry();
-        return;
-      }
-      
-      const minutes = Math.floor(remaining / 60000);
-      const seconds = Math.floor((remaining % 60000) / 1000);
-      
-      countdownTimer.textContent = 
-        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-      
-      setTimeout(updateTimer, 1000);
-    };
-    
-    updateTimer();
-  }
-  
-  function resetPinInput() {
-    pinInput.value = '';
-    updatePinDots();
-    pinInput.focus();
-  }
-  
-  function shakeInput() {
-    pinInput.classList.add('shake');
-    setTimeout(() => {
-      pinInput.classList.remove('shake');
-    }, 500);
-  }
-  
-  function showFeedback(message, type = 'info') {
-    pinFeedback.textContent = message;
-    pinFeedback.className = `pin-feedback ${type}`;
-    
-    // Auto-clear feedback after 3 seconds
-    setTimeout(() => {
-      if (pinFeedback.textContent === message) {
-        pinFeedback.textContent = '';
-        pinFeedback.className = 'pin-feedback';
-      }
-    }, 3000);
-  }
-  
-  function updateAttemptsCounter() {
-    if (authState.attempts > 0) {
-      const remaining = authState.maxAttempts - authState.attempts;
-      remainingAttempts.textContent = remaining;
-      attemptsCounter.style.display = 'inline-flex';
-    } else {
-      attemptsCounter.style.display = 'none';
-    }
-  }
-  
-  function logout() {
-    // Clear all authentication data
-    sessionStorage.removeItem('user_role');
-    sessionStorage.removeItem('pin_verified');
-    localStorage.removeItem('auth_state');
-    
-    // Reset auth state
-    resetAuthState();
-    
-    // Show PIN screen
-    pinAuth.style.display = 'flex';
-    document.getElementById('landing').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'none';
-    
-    // Reset UI
-    showPinEntry();
-    resetPinInput();
-    authState.currentRole = null;
-    
-    // Hide role badge
-    userRoleBadge.style.display = 'none';
-  }
-    
     // =============================================
     // SUPABASE CONFIGURATION
     // =============================================
@@ -2974,15 +2271,6 @@
 
     async function addPlayerNote(pageName, playerName, noteText) {
       try {
-        // Check if user has permission to add notes
-        const userRole = sessionStorage.getItem('user_role');
-        if (userRole !== 'admin') {
-          return { 
-            success: false, 
-            message: "Only administrators can add notes. You are in view-only mode."
-          };
-        }
-        
         const { data, error } = await supabase
           .from('player_notes')
           .insert([
@@ -3702,9 +2990,6 @@
     });
 
     function initializeApp() {
-      // Initialize authentication first
-      initializeAuth();
-      
       const savedPage = sessionStorage.getItem('currentPage');
       const savedView = sessionStorage.getItem('currentView');
       
@@ -3713,7 +2998,7 @@
       
       navigationContext = 'landing';
       
-      if (savedPage && authState.currentRole) {
+      if (savedPage) {
         selectedPage = savedPage;
         const pageObj = PAGES.find(p => p.name === savedPage);
         if (pageObj) {
@@ -3737,16 +3022,7 @@
       navigationContext = 'landing';
       
       document.getElementById('dashboard').style.display = 'none';
-      
-      // Only show landing page if authenticated
-      if (authState.currentRole) {
-        document.getElementById('landing').style.display = 'flex';
-        pinAuth.style.display = 'none';
-      } else {
-        document.getElementById('landing').style.display = 'none';
-        pinAuth.style.display = 'flex';
-      }
-      
+      document.getElementById('landing').style.display = 'flex';
       currentView = 'landing';
       sessionStorage.removeItem('currentPage');
       sessionStorage.removeItem('currentView');
@@ -3764,7 +3040,6 @@
       
       document.getElementById('landing').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
-      pinAuth.style.display = 'none';
       
       updatePageTitle();
       
@@ -3843,22 +3118,9 @@
     }
 
     function enableControlButtons() {
-      const userRole = sessionStorage.getItem('user_role');
-      
       changePageBtn.disabled = false;
-      
-      // Only enable sensitive buttons for admin users
-      if (userRole === 'admin') {
-        refreshBtn.disabled = false;
-        forceCleanupBtn.disabled = false;
-        refreshBtn.style.display = 'inline-flex';
-        forceCleanupBtn.style.display = 'inline-flex';
-      } else {
-        refreshBtn.disabled = true;
-        forceCleanupBtn.disabled = true;
-        refreshBtn.style.display = 'none';
-        forceCleanupBtn.style.display = 'none';
-      }
+      refreshBtn.disabled = false;
+      forceCleanupBtn.disabled = false;
     }
 
     function clearBackContainer() {
@@ -4374,9 +3636,6 @@
       const currentPage = tableState.playerTables[type].page;
       const paginatedPlayers = getPaginatedPlayers(players, currentPage, PLAYERS_PER_PAGE);
       
-      const userRole = sessionStorage.getItem('user_role');
-      const isViewer = userRole === 'viewer';
-      
       let html = `
         <div class="table-container">
           <div class="table-header">
@@ -4413,15 +3672,6 @@
         
         const serialNumber = (currentPage - 1) * PLAYERS_PER_PAGE + index + 1;
         
-        // For viewer role, disable note buttons
-        const noteButton = isViewer ? 
-          `<button class="notes-btn" disabled title="View-only mode - Cannot add notes">
-            <i class="fas fa-eye"></i> View
-          </button>` :
-          `<button class="${notesBtnClass}" onclick="showNotesModal('${p.player.replace(/'/g, "\\'")}', this)" title="${p.hasNotes ? 'View notes' : 'Add note'}">
-            <i class="fas ${notesBtnIcon}"></i> ${notesBtnText}
-          </button>`;
-        
         html += `
           <tr>
             <td style="text-align: center;">${serialNumber}</td>
@@ -4433,7 +3683,9 @@
             <td style="text-align: center;">${p.last7DaysDeposit || 0}</td>
             ${type === "RecentActive" ? `<td style="text-align: center;">${gapDays}</td>` : ''}
             <td style="text-align: center;">
-              ${noteButton}
+              <button class="${notesBtnClass}" onclick="showNotesModal('${p.player.replace(/'/g, "\\'")}', this)" title="${p.hasNotes ? 'View notes' : 'Add note'}">
+                <i class="fas ${notesBtnIcon}"></i> ${notesBtnText}
+              </button>
             </td>
           </tr>
         `;
@@ -4457,9 +3709,6 @@
       const totalPlayers = highRiskPlayers.length;
       const currentPage = tableState.highRisk.page;
       const paginatedPlayers = getPaginatedPlayers(highRiskPlayers, currentPage, PLAYERS_PER_PAGE);
-      
-      const userRole = sessionStorage.getItem('user_role');
-      const isViewer = userRole === 'viewer';
       
       let html = `
         <div class="table-container">
@@ -4513,15 +3762,6 @@
         
         const serialNumber = (currentPage - 1) * PLAYERS_PER_PAGE + index + 1;
         
-        // For viewer role, disable note buttons
-        const noteButton = isViewer ? 
-          `<button class="notes-btn" disabled title="View-only mode - Cannot add notes">
-            <i class="fas fa-eye"></i> View
-          </button>` :
-          `<button class="${notesBtnClass}" onclick="showNotesModal('${p.player.replace(/'/g, "\\'")}', this)" title="${p.hasNotes ? 'View notes' : 'Add note'}">
-            <i class="fas ${notesBtnIcon}"></i> ${notesBtnText}
-          </button>`;
-        
         html += `
           <tr>
             <td style="text-align: center;">${serialNumber}</td>
@@ -4538,7 +3778,9 @@
             <td><span class="status-badge ${statusClass}">${p.currentStatus}</span></td>
             <td style="text-align: center;">${p.totalDeposits}</td>
             <td>
-              ${noteButton}
+              <button class="${notesBtnClass}" onclick="showNotesModal('${p.player.replace(/'/g, "\\'")}', this)" title="${p.hasNotes ? 'View notes' : 'Add note'}">
+                <i class="fas ${notesBtnIcon}"></i> ${notesBtnText}
+              </button>
             </td>
           </tr>
         `;
@@ -4955,12 +4197,6 @@
 
     // Notes Modal Functions
     async function showNotesModal(playerName, buttonElement) {
-      const userRole = sessionStorage.getItem('user_role');
-      if (userRole === 'viewer') {
-        showNotification('View-only mode: Cannot add or view notes', 'warning');
-        return;
-      }
-      
       currentNotesPlayer = playerName;
       currentNotesPlayerName = playerName;
       currentNotesButton = buttonElement;
@@ -5012,12 +4248,6 @@
     }
 
     async function savePlayerNote() {
-      const userRole = sessionStorage.getItem('user_role');
-      if (userRole !== 'admin') {
-        showNotification('Only administrators can add notes', 'error');
-        return;
-      }
-      
       const noteText = noteTextInput.value.trim();
       
       if (!noteText) {
@@ -5086,12 +4316,6 @@
 
     // Modal functions
     function showRefreshModal() {
-      const userRole = sessionStorage.getItem('user_role');
-      if (userRole !== 'admin') {
-        showNotification('Only administrators can refresh data', 'warning');
-        return;
-      }
-      
       if (refreshBtn.disabled) return;
       refreshPinInput.value = '';
       refreshModal.style.display = 'block';
@@ -5104,12 +4328,6 @@
     }
 
     function showCleanupModal() {
-      const userRole = sessionStorage.getItem('user_role');
-      if (userRole !== 'admin') {
-        showNotification('Only administrators can perform cleanup', 'warning');
-        return;
-      }
-      
       if (forceCleanupBtn.disabled) return;
       cleanupPinInput.value = '';
       cleanupModal.style.display = 'block';
@@ -5122,13 +4340,6 @@
     }
 
     async function confirmRefresh() {
-      const userRole = sessionStorage.getItem('user_role');
-      if (userRole !== 'admin') {
-        showNotification('Only administrators can refresh data', 'error');
-        hideRefreshModal();
-        return;
-      }
-      
       const pin = refreshPinInput.value.trim();
       if (!pin) {
         showNotification('Please enter PIN', 'error');
@@ -5165,13 +4376,6 @@
     }
 
     async function confirmForceCleanup() {
-      const userRole = sessionStorage.getItem('user_role');
-      if (userRole !== 'admin') {
-        showNotification('Only administrators can perform cleanup', 'error');
-        hideCleanupModal();
-        return;
-      }
-      
       const pin = cleanupPinInput.value.trim();
       if (!pin) {
         showNotification('Please enter PIN', 'error');
@@ -5214,17 +4418,9 @@
     }
 
     function enableAllButtons() {
-      const userRole = sessionStorage.getItem('user_role');
-      
       changePageBtn.disabled = false;
-      
-      if (userRole === 'admin') {
-        refreshBtn.disabled = false;
-        forceCleanupBtn.disabled = false;
-      } else {
-        refreshBtn.disabled = true;
-        forceCleanupBtn.disabled = true;
-      }
+      refreshBtn.disabled = false;
+      forceCleanupBtn.disabled = false;
     }
 
     // Event listeners
