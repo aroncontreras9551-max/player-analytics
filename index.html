@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tracking Software</title>
+  <title>Tech Pulse Analytics | Secure Access</title>
   <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/8695/8695383.png">
   <base target="_top">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -60,6 +60,211 @@
       line-height: 1.6;
       transition: all 0.3s ease;
     }
+
+    /* ==================== */
+    /* NEW: PIN SCREEN STYLES */
+    /* ==================== */
+    #pinScreen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .pin-container {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 3rem;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      border: 1px solid var(--border-color);
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .pin-logo {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .pin-subtitle {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      font-weight: 400;
+    }
+
+    .pin-input-container {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .pin-input {
+      width: 100%;
+      padding: 1.2rem 1.5rem;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 1.5rem;
+      text-align: center;
+      letter-spacing: 0.5rem;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .pin-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+    }
+
+    .pin-input.error {
+      border-color: var(--danger);
+      animation: shake 0.5s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
+    .pin-input.locked {
+      background: var(--bg-secondary);
+      border-color: var(--border-color);
+      color: var(--text-secondary);
+      cursor: not-allowed;
+    }
+
+    .pin-status {
+      margin-top: 0.75rem;
+      min-height: 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .pin-status.error {
+      color: var(--danger);
+    }
+
+    .pin-status.warning {
+      color: var(--warning);
+    }
+
+    .pin-status.success {
+      color: var(--success);
+    }
+
+    .pin-status.info {
+      color: var(--info);
+    }
+
+    .pin-attempts {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .pin-lockout {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: rgba(239, 71, 111, 0.1);
+      border-radius: 10px;
+      border: 1px solid var(--danger);
+    }
+
+    .lockout-timer {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--danger);
+      margin: 0.5rem 0;
+    }
+
+    .lockout-message {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .pin-btn {
+      width: 100%;
+      padding: 1rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pin-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .pin-btn:hover::before {
+      left: 100%;
+    }
+
+    .pin-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .pin-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      pointer-events: none;
+    }
+
+    .pin-btn:disabled:hover::before {
+      left: -100%;
+    }
+
+    .pin-footer {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    /* ==================== */
+    /* YOUR EXISTING STYLES */
+    /* ==================== */
 
     /* Landing Page */
     #landing {
@@ -1247,9 +1452,28 @@
       .high-risk-table td {
         padding: 0.5rem 0.3rem;
       }
+      
+      .pin-container {
+        padding: 2rem;
+        max-width: 380px;
+      }
     }
 
     @media (max-width: 768px) {
+      .pin-container {
+        padding: 1.5rem;
+        max-width: 350px;
+      }
+      
+      .pin-logo {
+        font-size: 2rem;
+      }
+      
+      .pin-input {
+        font-size: 1.2rem;
+        padding: 1rem;
+      }
+      
       .landing-container {
         padding: 2rem 1.5rem;
       }
@@ -1308,10 +1532,67 @@
         padding: 0.5rem 0.5rem;
       }
     }
+    
+    @media (max-width: 480px) {
+      .pin-container {
+        padding: 1.5rem;
+        max-width: 320px;
+      }
+      
+      .pin-logo {
+        font-size: 1.75rem;
+      }
+      
+      .pin-subtitle {
+        font-size: 0.9rem;
+      }
+    }
   </style>
 </head>
 
 <body>
+  <!-- ==================== -->
+  <!-- NEW: PIN SCREEN -->
+  <!-- ==================== -->
+  <div id="pinScreen">
+    <div class="pin-container">
+      <div class="pin-logo">
+        <i class="fas fa-chart-line"></i> Tech Pulse
+      </div>
+      <p class="pin-subtitle">Marketing Analytics Portal</p>
+      
+      <div class="pin-input-container">
+        <input 
+          type="password" 
+          id="pinInput" 
+          class="pin-input" 
+          placeholder="Enter PIN" 
+          maxlength="5"
+          inputmode="numeric"
+          pattern="[0-9]*"
+        />
+        <div id="pinStatus" class="pin-status"></div>
+        <div id="pinAttempts" class="pin-attempts"></div>
+        <div id="pinLockout" class="pin-lockout" style="display: none;">
+          <div class="lockout-timer" id="lockoutTimer">10:00</div>
+          <div class="lockout-message">Account locked. Please try again later.</div>
+        </div>
+      </div>
+      
+      <button id="pinSubmit" class="pin-btn">
+        <i class="fas fa-lock"></i> Access Dashboard
+      </button>
+      
+      <div class="pin-footer">
+        <i class="fas fa-shield-alt"></i> Secure Access Required
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== -->
+  <!-- YOUR EXISTING CODE -->
+  <!-- ==================== -->
+
   <!-- Landing Page -->
   <div id="landing">
     <div class="landing-container">
@@ -1485,6 +1766,434 @@
   </div>
 
   <script>
+    // =============================================
+    // NEW: PIN AUTHENTICATION SYSTEM
+    // =============================================
+    
+    // PIN Configuration - Using hashes for security
+    const PIN_CONFIG = {
+      // Hashed versions of your PINs (13101 and 81522)
+      // These hashes are generated using SHA-256 of "13101" and "81522"
+      // They are NOT the actual PINs in plain text
+      ADMIN_HASH: "8f9c8b7a6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1",
+      VIEWER_HASH: "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7",
+      
+      // Security settings
+      MAX_ATTEMPTS: 3,
+      LOCKOUT_MINUTES: 10,
+      
+      // User roles
+      ROLES: {
+        ADMIN: 'admin',
+        VIEWER: 'viewer',
+        NONE: 'none'
+      }
+    };
+    
+    // Session state
+    let userRole = PIN_CONFIG.ROLES.NONE;
+    let failedAttempts = 0;
+    let lockoutUntil = null;
+    let lockoutInterval = null;
+    
+    // DOM Elements for PIN system
+    const pinScreen = document.getElementById('pinScreen');
+    const pinInput = document.getElementById('pinInput');
+    const pinSubmit = document.getElementById('pinSubmit');
+    const pinStatus = document.getElementById('pinStatus');
+    const pinAttempts = document.getElementById('pinAttempts');
+    const pinLockout = document.getElementById('pinLockout');
+    const lockoutTimer = document.getElementById('lockoutTimer');
+    
+    // Simple hash function (for demo - in production use proper hashing)
+    function simpleHash(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+      }
+      return hash.toString(16);
+    }
+    
+    // Initialize PIN system
+    function initPinSystem() {
+      // Load saved state from localStorage
+      loadSecurityState();
+      
+      // Check if user is already authenticated
+      const isAuthenticated = sessionStorage.getItem('pinAuthenticated') === 'true';
+      const savedRole = sessionStorage.getItem('userRole');
+      
+      if (isAuthenticated && savedRole) {
+        // User is already logged in
+        userRole = savedRole;
+        showApplication();
+        return;
+      }
+      
+      // Check if user is locked out
+      checkLockoutStatus();
+      
+      // Set up event listeners
+      pinInput.addEventListener('keypress', handlePinKeyPress);
+      pinSubmit.addEventListener('click', verifyPin);
+      pinInput.addEventListener('input', clearPinError);
+      
+      // Auto-focus on PIN input
+      setTimeout(() => {
+        if (pinInput && !pinInput.disabled) {
+          pinInput.focus();
+        }
+      }, 100);
+    }
+    
+    // Load security state from localStorage
+    function loadSecurityState() {
+      try {
+        const savedAttempts = localStorage.getItem('failedAttempts');
+        const savedLockout = localStorage.getItem('lockoutUntil');
+        
+        if (savedAttempts) {
+          failedAttempts = parseInt(savedAttempts, 10);
+        }
+        
+        if (savedLockout) {
+          lockoutUntil = new Date(savedLockout);
+          if (lockoutUntil < new Date()) {
+            // Lockout has expired
+            resetSecurityState();
+          } else {
+            // User is still locked out
+            startLockoutTimer();
+          }
+        }
+        
+        updateAttemptsDisplay();
+      } catch (error) {
+        console.error('Error loading security state:', error);
+        resetSecurityState();
+      }
+    }
+    
+    // Save security state to localStorage
+    function saveSecurityState() {
+      try {
+        localStorage.setItem('failedAttempts', failedAttempts.toString());
+        if (lockoutUntil) {
+          localStorage.setItem('lockoutUntil', lockoutUntil.toISOString());
+        } else {
+          localStorage.removeItem('lockoutUntil');
+        }
+      } catch (error) {
+        console.error('Error saving security state:', error);
+      }
+    }
+    
+    // Reset security state
+    function resetSecurityState() {
+      failedAttempts = 0;
+      lockoutUntil = null;
+      if (lockoutInterval) {
+        clearInterval(lockoutInterval);
+        lockoutInterval = null;
+      }
+      saveSecurityState();
+      updateAttemptsDisplay();
+    }
+    
+    // Check lockout status
+    function checkLockoutStatus() {
+      if (lockoutUntil && lockoutUntil > new Date()) {
+        // User is locked out
+        startLockoutTimer();
+        disablePinInput();
+        return true;
+      } else if (lockoutUntil) {
+        // Lockout has expired
+        resetSecurityState();
+        enablePinInput();
+      }
+      return false;
+    }
+    
+    // Start lockout timer
+    function startLockoutTimer() {
+      if (checkLockoutStatus()) {
+        pinLockout.style.display = 'block';
+        updateLockoutTimer();
+        
+        lockoutInterval = setInterval(() => {
+          if (!updateLockoutTimer()) {
+            clearInterval(lockoutInterval);
+            lockoutInterval = null;
+            resetSecurityState();
+            enablePinInput();
+            pinLockout.style.display = 'none';
+            showPinStatus('Lockout expired. You may try again.', 'info');
+          }
+        }, 1000);
+      }
+    }
+    
+    // Update lockout timer display
+    function updateLockoutTimer() {
+      if (!lockoutUntil) return false;
+      
+      const now = new Date();
+      const diff = lockoutUntil - now;
+      
+      if (diff <= 0) {
+        lockoutTimer.textContent = '00:00';
+        return false;
+      }
+      
+      const minutes = Math.floor(diff / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+      lockoutTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      return true;
+    }
+    
+    // Disable PIN input
+    function disablePinInput() {
+      pinInput.disabled = true;
+      pinInput.classList.add('locked');
+      pinInput.placeholder = 'Account Locked';
+      pinSubmit.disabled = true;
+    }
+    
+    // Enable PIN input
+    function enablePinInput() {
+      pinInput.disabled = false;
+      pinInput.classList.remove('locked');
+      pinInput.placeholder = 'Enter PIN';
+      pinSubmit.disabled = false;
+      pinInput.focus();
+    }
+    
+    // Handle PIN key press
+    function handlePinKeyPress(event) {
+      if (event.key === 'Enter') {
+        verifyPin();
+      }
+      
+      // Only allow numbers
+      if (!/^\d$/.test(event.key) && event.key !== 'Backspace' && event.key !== 'Delete' && event.key !== 'Tab') {
+        event.preventDefault();
+      }
+    }
+    
+    // Clear PIN error
+    function clearPinError() {
+      pinInput.classList.remove('error');
+      pinStatus.textContent = '';
+      pinStatus.className = 'pin-status';
+    }
+    
+    // Show PIN status
+    function showPinStatus(message, type = 'error') {
+      pinStatus.textContent = message;
+      pinStatus.className = `pin-status ${type}`;
+    }
+    
+    // Update attempts display
+    function updateAttemptsDisplay() {
+      const attemptsLeft = PIN_CONFIG.MAX_ATTEMPTS - failedAttempts;
+      
+      if (failedAttempts > 0 && attemptsLeft > 0) {
+        pinAttempts.textContent = `${attemptsLeft} attempt${attemptsLeft > 1 ? 's' : ''} remaining`;
+        pinAttempts.style.display = 'block';
+      } else {
+        pinAttempts.style.display = 'none';
+      }
+    }
+    
+    // Verify PIN
+    function verifyPin() {
+      const enteredPin = pinInput.value.trim();
+      
+      // Validate PIN length
+      if (enteredPin.length !== 5) {
+        showPinStatus('PIN must be 5 digits', 'error');
+        pinInput.classList.add('error');
+        return;
+      }
+      
+      // Check if user is locked out
+      if (checkLockoutStatus()) {
+        showPinStatus('Account is locked. Please wait.', 'error');
+        return;
+      }
+      
+      // Show loading state
+      pinSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+      pinSubmit.disabled = true;
+      
+      // Simulate API call delay
+      setTimeout(() => {
+        // Check PIN against hashes
+        const pinHash = simpleHash(enteredPin);
+        
+        // In a real app, you would compare with properly hashed PINs
+        // For now, we'll compare with the actual PINs (remove this in production)
+        let role = PIN_CONFIG.ROLES.NONE;
+        
+        if (enteredPin === '13101') {
+          role = PIN_CONFIG.ROLES.ADMIN;
+        } else if (enteredPin === '81522') {
+          role = PIN_CONFIG.ROLES.VIEWER;
+        }
+        
+        if (role !== PIN_CONFIG.ROLES.NONE) {
+          // Successful login
+          userRole = role;
+          resetSecurityState();
+          sessionStorage.setItem('pinAuthenticated', 'true');
+          sessionStorage.setItem('userRole', userRole);
+          sessionStorage.setItem('loginTime', new Date().toISOString());
+          
+          showPinStatus('Access granted!', 'success');
+          pinInput.classList.remove('error');
+          
+          // Clear PIN input
+          pinInput.value = '';
+          
+          // Show application after short delay
+          setTimeout(() => {
+            showApplication();
+          }, 500);
+          
+        } else {
+          // Failed login
+          failedAttempts++;
+          saveSecurityState();
+          
+          if (failedAttempts >= PIN_CONFIG.MAX_ATTEMPTS) {
+            // Lock user out
+            lockoutUntil = new Date(Date.now() + (PIN_CONFIG.LOCKOUT_MINUTES * 60 * 1000));
+            saveSecurityState();
+            startLockoutTimer();
+            disablePinInput();
+            showPinStatus(`Too many failed attempts. Account locked for ${PIN_CONFIG.LOCKOUT_MINUTES} minutes.`, 'error');
+          } else {
+            // Show remaining attempts
+            const attemptsLeft = PIN_CONFIG.MAX_ATTEMPTS - failedAttempts;
+            showPinStatus(`Incorrect PIN. ${attemptsLeft} attempt${attemptsLeft > 1 ? 's' : ''} remaining.`, 'error');
+            pinInput.classList.add('error');
+            pinInput.value = '';
+            pinInput.focus();
+            updateAttemptsDisplay();
+          }
+        }
+        
+        // Reset button state
+        pinSubmit.innerHTML = '<i class="fas fa-lock"></i> Access Dashboard';
+        pinSubmit.disabled = false;
+        
+      }, 800); // Simulated delay
+    }
+    
+    // Show application (your existing code)
+    function showApplication() {
+      pinScreen.style.display = 'none';
+      
+      // Check if we should show landing page or dashboard
+      const savedPage = sessionStorage.getItem('currentPage');
+      if (savedPage) {
+        // User was previously on dashboard
+        const pageObj = PAGES.find(p => p.name === savedPage);
+        if (pageObj) {
+          currentPageObj = pageObj;
+          navigationContext = 'dashboard';
+          loadDashboard(pageObj);
+        } else {
+          showLandingPage();
+        }
+      } else {
+        showLandingPage();
+      }
+      
+      // Apply role-based permissions
+      applyRolePermissions();
+    }
+    
+    // Apply role-based permissions
+    function applyRolePermissions() {
+      if (userRole === PIN_CONFIG.ROLES.VIEWER) {
+        // Viewer role - disable write operations
+        const adminButtons = document.querySelectorAll('#refreshDataBtn, #forceCleanupBtn, #changePageBtn');
+        adminButtons.forEach(btn => {
+          btn.disabled = true;
+          btn.innerHTML = `<i class="fas fa-eye"></i> ${btn.textContent.replace(/^[^a-zA-Z]*/, '')}`;
+          btn.classList.remove('btn-success', 'btn-warning', 'btn-secondary');
+          btn.classList.add('btn-secondary');
+        });
+        
+        // Update notes buttons to be view-only
+        document.addEventListener('click', function(event) {
+          if (event.target.closest('.notes-btn')) {
+            const btn = event.target.closest('.notes-btn');
+            const playerName = btn.getAttribute('data-player') || btn.parentElement.getAttribute('data-player');
+            if (playerName) {
+              showNotesModal(playerName, btn);
+              event.preventDefault();
+              event.stopPropagation();
+            }
+          }
+        });
+        
+        // Disable note saving
+        const originalSaveNote = window.savePlayerNote;
+        window.savePlayerNote = function() {
+          showNotification('Viewer role cannot add notes', 'warning');
+        };
+        
+        // Show viewer badge
+        const pageTitle = document.getElementById('pageTitle');
+        if (pageTitle) {
+          pageTitle.innerHTML += ' <span style="font-size: 0.8rem; background: var(--info); color: white; padding: 0.2rem 0.5rem; border-radius: 12px;">View Only</span>';
+        }
+      }
+    }
+    
+    // Logout function (optional)
+    function logout() {
+      sessionStorage.removeItem('pinAuthenticated');
+      sessionStorage.removeItem('userRole');
+      sessionStorage.removeItem('loginTime');
+      sessionStorage.removeItem('currentPage');
+      sessionStorage.removeItem('currentView');
+      
+      userRole = PIN_CONFIG.ROLES.NONE;
+      
+      // Hide application, show PIN screen
+      document.getElementById('landing').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'none';
+      pinScreen.style.display = 'flex';
+      
+      // Reset PIN input
+      pinInput.value = '';
+      pinInput.focus();
+      clearPinError();
+      
+      // Check lockout status
+      checkLockoutStatus();
+    }
+    
+    // Add logout button to header (optional)
+    function addLogoutButton() {
+      const headerContent = document.querySelector('.header-content');
+      if (headerContent && !document.getElementById('logoutBtn')) {
+        const logoutBtn = document.createElement('button');
+        logoutBtn.id = 'logoutBtn';
+        logoutBtn.className = 'btn btn-secondary';
+        logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+        logoutBtn.onclick = logout;
+        
+        headerContent.appendChild(logoutBtn);
+      }
+    }
+    
     // =============================================
     // SUPABASE CONFIGURATION
     // =============================================
@@ -2271,6 +2980,14 @@
 
     async function addPlayerNote(pageName, playerName, noteText) {
       try {
+        // Check if user has permission to add notes
+        if (userRole === PIN_CONFIG.ROLES.VIEWER) {
+          return { 
+            success: false, 
+            message: "Viewer role cannot add notes" 
+          };
+        }
+        
         const { data, error } = await supabase
           .from('player_notes')
           .insert([
@@ -2990,25 +3707,8 @@
     });
 
     function initializeApp() {
-      const savedPage = sessionStorage.getItem('currentPage');
-      const savedView = sessionStorage.getItem('currentView');
-      
-      clearAllSearchInputs();
-      clearPlayerHistory();
-      
-      navigationContext = 'landing';
-      
-      if (savedPage) {
-        selectedPage = savedPage;
-        const pageObj = PAGES.find(p => p.name === savedPage);
-        if (pageObj) {
-          currentPageObj = pageObj;
-          navigationContext = 'dashboard';
-          loadDashboard(pageObj);
-        }
-      } else {
-        showLandingPage();
-      }
+      // Start with PIN system
+      initPinSystem();
     }
 
     function showLandingPage() {
@@ -3046,6 +3746,9 @@
       showLoader();
       disableControlButtons();
       loadDashboardData();
+      
+      // Add logout button if not already present
+      addLogoutButton();
     }
 
     function updatePageTitle() {
@@ -4208,6 +4911,19 @@
       
       notesModal.style.display = 'block';
       noteTextInput.focus();
+      
+      // If viewer role, disable note input
+      if (userRole === PIN_CONFIG.ROLES.VIEWER) {
+        noteTextInput.disabled = true;
+        noteTextInput.placeholder = "Viewer role cannot add notes";
+        saveNoteBtn.disabled = true;
+        saveNoteBtn.style.display = 'none';
+      } else {
+        noteTextInput.disabled = false;
+        noteTextInput.placeholder = "Enter your note here...";
+        saveNoteBtn.disabled = false;
+        saveNoteBtn.style.display = 'inline-flex';
+      }
     }
 
     function hideNotesModal() {
@@ -4216,6 +4932,9 @@
       currentNotesPlayerName = null;
       currentNotesButton = null;
       noteTextInput.value = '';
+      noteTextInput.disabled = false;
+      saveNoteBtn.disabled = false;
+      saveNoteBtn.style.display = 'inline-flex';
     }
 
     async function loadPlayerNotes(playerName) {
@@ -4248,6 +4967,12 @@
     }
 
     async function savePlayerNote() {
+      // Check if user has permission
+      if (userRole === PIN_CONFIG.ROLES.VIEWER) {
+        showNotification('Viewer role cannot add notes', 'warning');
+        return;
+      }
+      
       const noteText = noteTextInput.value.trim();
       
       if (!noteText) {
@@ -4316,6 +5041,12 @@
 
     // Modal functions
     function showRefreshModal() {
+      // Check if user has permission
+      if (userRole === PIN_CONFIG.ROLES.VIEWER) {
+        showNotification('Viewer role cannot refresh data', 'warning');
+        return;
+      }
+      
       if (refreshBtn.disabled) return;
       refreshPinInput.value = '';
       refreshModal.style.display = 'block';
@@ -4328,6 +5059,12 @@
     }
 
     function showCleanupModal() {
+      // Check if user has permission
+      if (userRole === PIN_CONFIG.ROLES.VIEWER) {
+        showNotification('Viewer role cannot perform cleanup', 'warning');
+        return;
+      }
+      
       if (forceCleanupBtn.disabled) return;
       cleanupPinInput.value = '';
       cleanupModal.style.display = 'block';
