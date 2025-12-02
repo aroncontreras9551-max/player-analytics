@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Plyer Tracking</title>
+  <title>Player Tracking</title>
   <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/8695/8695383.png">
   <base target="_top">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -1855,14 +1855,21 @@
           failedAttempts = parseInt(savedAttempts, 10);
         }
         
-        if (savedLockout) {
+                if (savedLockout) {
           lockoutUntil = new Date(savedLockout);
           if (lockoutUntil < new Date()) {
             // Lockout has expired
             resetSecurityState();
           } else {
-            // User is still locked out
-            startLockoutTimer();
+            // User is still locked out - set a small delay to prevent recursion
+            setTimeout(() => {
+              if (lockoutUntil && lockoutUntil > new Date()) {
+                disablePinInput();
+                pinLockout.style.display = 'block';
+                updateLockoutTimer();
+                startLockoutTimer();
+              }
+            }, 100);
           }
         }
         
@@ -1899,38 +1906,56 @@
       updateAttemptsDisplay();
     }
     
-    // Check lockout status
+        // Check lockout status - FIXED to prevent recursion
     function checkLockoutStatus() {
-      if (lockoutUntil && lockoutUntil > new Date()) {
+      if (!lockoutUntil) return false;
+      
+      const now = new Date();
+      if (lockoutUntil > now) {
         // User is locked out
         startLockoutTimer();
         disablePinInput();
         return true;
-      } else if (lockoutUntil) {
+      } else {
         // Lockout has expired
         resetSecurityState();
         enablePinInput();
+        return false;
       }
-      return false;
     }
     
-    // Start lockout timer
+    // Start lockout timer - FIXED to prevent recursion
     function startLockoutTimer() {
-      if (checkLockoutStatus()) {
-        pinLockout.style.display = 'block';
-        updateLockoutTimer();
-        
-        lockoutInterval = setInterval(() => {
-          if (!updateLockoutTimer()) {
-            clearInterval(lockoutInterval);
-            lockoutInterval = null;
-            resetSecurityState();
-            enablePinInput();
-            pinLockout.style.display = 'none';
-            showPinStatus('Lockout expired. You may try again.', 'info');
-          }
-        }, 1000);
+      if (!lockoutUntil || lockoutUntil <= new Date()) {
+        // Lockout expired or invalid
+        if (lockoutInterval) {
+          clearInterval(lockoutInterval);
+          lockoutInterval = null;
+        }
+        resetSecurityState();
+        enablePinInput();
+        pinLockout.style.display = 'none';
+        return;
       }
+      
+      pinLockout.style.display = 'block';
+      updateLockoutTimer();
+      
+      // Clear any existing interval
+      if (lockoutInterval) {
+        clearInterval(lockoutInterval);
+      }
+      
+      lockoutInterval = setInterval(() => {
+        if (!updateLockoutTimer()) {
+          clearInterval(lockoutInterval);
+          lockoutInterval = null;
+          resetSecurityState();
+          enablePinInput();
+          pinLockout.style.display = 'none';
+          showPinStatus('Lockout expired. You may try again.', 'info');
+        }
+      }, 1000);
     }
     
     // Update lockout timer display
@@ -2065,13 +2090,19 @@
           failedAttempts++;
           saveSecurityState();
           
-          if (failedAttempts >= PIN_CONFIG.MAX_ATTEMPTS) {
+                    if (failedAttempts >= PIN_CONFIG.MAX_ATTEMPTS) {
             // Lock user out
             lockoutUntil = new Date(Date.now() + (PIN_CONFIG.LOCKOUT_MINUTES * 60 * 1000));
             saveSecurityState();
-            startLockoutTimer();
-            disablePinInput();
+            disablePinInput(); // Disable first
+            pinLockout.style.display = 'block'; // Show lockout UI
+            updateLockoutTimer(); // Update timer display
             showPinStatus(`Too many failed attempts. Account locked for ${PIN_CONFIG.LOCKOUT_MINUTES} minutes.`, 'error');
+            
+            // Start timer after UI is updated
+            setTimeout(() => {
+              startLockoutTimer();
+            }, 100);
           } else {
             // Show remaining attempts
             const attemptsLeft = PIN_CONFIG.MAX_ATTEMPTS - failedAttempts;
