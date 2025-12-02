@@ -1895,25 +1895,107 @@
     }
 
     // =============================================
-    // SUPABASE DATA FUNCTIONS
+    // PAGINATION HELPER FUNCTIONS (FIXED FOR ALL QUERIES)
+    // =============================================
+
+    // Helper function to fetch ALL rows from a table with pagination
+    async function fetchAllRows(tableName, filters = {}, orderBy = null) {
+      let allData = [];
+      let currentPage = 0;
+      const pageSize = 1000; // Supabase max per request
+      let hasMore = true;
+      
+      console.log(`Fetching ALL rows from ${tableName} with filters:`, filters);
+      
+      while (hasMore) {
+        let query = supabase
+          .from(tableName)
+          .select('*')
+          .range(currentPage * pageSize, (currentPage + 1) * pageSize - 1);
+        
+        // Apply filters
+        Object.keys(filters).forEach(key => {
+          if (filters[key] !== undefined && filters[key] !== null) {
+            query = query.eq(key, filters[key]);
+          }
+        });
+        
+        // Apply ordering if specified
+        if (orderBy) {
+          query = query.order(orderBy.field, { ascending: orderBy.ascending });
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error(`Error fetching page ${currentPage} from ${tableName}:`, error);
+          throw error;
+        }
+        
+        if (data && data.length > 0) {
+          allData = [...allData, ...data];
+          console.log(`Fetched page ${currentPage + 1}: ${data.length} rows (Total: ${allData.length})`);
+          
+          // Check if we got fewer than pageSize (means last page)
+          if (data.length < pageSize) {
+            hasMore = false;
+            console.log(`Reached last page for ${tableName}. Total rows: ${allData.length}`);
+          } else {
+            currentPage++;
+          }
+        } else {
+          hasMore = false;
+          console.log(`No more data for ${tableName}. Total rows: ${allData.length}`);
+        }
+      }
+      
+      return allData;
+    }
+
+    // =============================================
+    // SUPABASE DATA FUNCTIONS - ALL FIXED WITH PAGINATION
     // =============================================
 
     async function searchPlayers(searchTerm) {
       if (!searchTerm || searchTerm.length < 2) return [];
       
       try {
-        const { data, error } = await supabase
-          .from('latest_status')
-          .select('player_name, page_name')
-          .ilike('player_name', `%${searchTerm}%`)
-          .limit(50);
+        // Fetch ALL players with pagination
+        let allPlayers = [];
+        let currentPage = 0;
+        const pageSize = 1000;
+        let hasMore = true;
         
-        if (error) throw error;
+        console.log(`Searching players for: "${searchTerm}"`);
+        
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from('latest_status')
+            .select('player_name, page_name')
+            .ilike('player_name', `%${searchTerm}%`)
+            .range(currentPage * pageSize, (currentPage + 1) * pageSize - 1);
+          
+          if (error) throw error;
+          
+          if (data && data.length > 0) {
+            allPlayers = [...allPlayers, ...data];
+            
+            if (data.length < pageSize) {
+              hasMore = false;
+            } else {
+              currentPage++;
+            }
+          } else {
+            hasMore = false;
+          }
+        }
+        
+        console.log(`Total players found for search "${searchTerm}": ${allPlayers.length}`);
         
         const uniqueResults = [];
         const seen = new Set();
         
-        data.forEach(result => {
+        allPlayers.forEach(result => {
           const key = `${result.player_name}||${result.page_name}`;
           if (!seen.has(key)) {
             seen.add(key);
@@ -1931,6 +2013,7 @@
           return a.page.localeCompare(b.page);
         });
         
+        console.log(`Unique players after deduping: ${uniqueResults.length}`);
         return uniqueResults;
       } catch (error) {
         console.error('Error searching players:', error);
@@ -1941,7 +2024,7 @@
 
     async function getPageActivity(pageName) {
       try {
-        // Get latest status for the page
+        // Get latest status for the page - this table might be pre-aggregated
         const { data: statusData, error: statusError } = await supabase
           .from('latest_status')
           .select('*')
@@ -1953,7 +2036,7 @@
           return getEmptyPageData(pageName);
         }
 
-        // Get deposit data for calculations
+        // Get deposit data for calculations - USING PAGINATION FIX
         const depositData = await computePlayerDeposits(pageName);
 
         const playersWithNotes = await getAllPlayersWithNotes(pageName);
@@ -2080,32 +2163,12 @@
 
     async function computePlayerDeposits(pageName) {
       try {
-        let allDeposits = [];
-        let currentPage = 0;
-        const pageSize = 1000;
-        let hasMore = true;
+        console.log(`Computing deposits for page: ${pageName}`);
         
-        while (hasMore) {
-          const { data, error } = await supabase
-            .from('deposits')
-            .select('player_name, amount, deposit_date')
-            .eq('page_name', pageName)
-            .range(currentPage * pageSize, (currentPage + 1) * pageSize - 1);
-          
-          if (error) throw error;
-          
-          if (data && data.length > 0) {
-            allDeposits = [...allDeposits, ...data];
-            
-            if (data.length < pageSize) {
-              hasMore = false;
-            } else {
-              currentPage++;
-            }
-          } else {
-            hasMore = false;
-          }
-        }
+        // FIXED: Use pagination helper to get ALL deposits
+        const allDeposits = await fetchAllRows('deposits', { page_name: pageName }, { field: 'deposit_date', ascending: true });
+        
+        console.log(`Total deposits fetched for ${pageName}: ${allDeposits.length}`);
         
         if (allDeposits.length === 0) {
           return {};
@@ -2132,6 +2195,7 @@
           }
         });
         
+        console.log(`Processed deposits for ${Object.keys(depositData).length} players`);
         return depositData;
         
       } catch (error) {
@@ -2168,18 +2232,15 @@
 
     async function getAllPlayersWithNotes(pageName) {
       try {
-        const { data, error } = await supabase
-          .from('player_notes')
-          .select('player_name')
-          .eq('page_name', pageName);
-        
-        if (error) throw error;
+        // FIXED: Use pagination helper
+        const allNotes = await fetchAllRows('player_notes', { page_name: pageName });
         
         const playersWithNotes = {};
-        data.forEach(note => {
+        allNotes.forEach(note => {
           playersWithNotes[note.player_name] = true;
         });
         
+        console.log(`Players with notes on ${pageName}: ${Object.keys(playersWithNotes).length}`);
         return playersWithNotes;
       } catch (error) {
         console.error('Error getting players with notes:', error);
@@ -2189,17 +2250,14 @@
 
     async function getPlayerNotes(pageName, playerName) {
       try {
-        const { data, error } = await supabase
-          .from('player_notes')
-          .select('*')
-          .eq('page_name', pageName)
-          .eq('player_name', playerName)
-          .order('created_at', { ascending: false });
-        
-        if (error) throw error;
+        // FIXED: Use pagination helper
+        const allNotes = await fetchAllRows('player_notes', { 
+          page_name: pageName, 
+          player_name: playerName 
+        }, { field: 'created_at', ascending: false });
         
         return { 
-          notes: data.map(note => ({
+          notes: allNotes.map(note => ({
             timestamp: note.created_at,
             note: note.note_text
           })), 
@@ -2281,32 +2339,12 @@
 
     async function getHighRiskPlayers(pageName) {
       try {
-        let allDeposits = [];
-        let currentPage = 0;
-        const pageSize = 1000;
-        let hasMore = true;
+        console.log(`Getting high risk players for page: ${pageName}`);
         
-        while (hasMore) {
-          const { data, error } = await supabase
-            .from('deposits')
-            .select('player_name, deposit_date')
-            .eq('page_name', pageName)
-            .range(currentPage * pageSize, (currentPage + 1) * pageSize - 1);
-          
-          if (error) throw error;
-          
-          if (data && data.length > 0) {
-            allDeposits = [...allDeposits, ...data];
-            
-            if (data.length < pageSize) {
-              hasMore = false;
-            } else {
-              currentPage++;
-            }
-          } else {
-            hasMore = false;
-          }
-        }
+        // FIXED: Use pagination helper to get ALL deposits
+        const allDeposits = await fetchAllRows('deposits', { page_name: pageName }, { field: 'deposit_date', ascending: true });
+        
+        console.log(`Total deposits for high risk analysis: ${allDeposits.length}`);
         
         if (allDeposits.length === 0) {
           return { highRiskPlayers: [], message: "No deposit data available" };
@@ -2327,6 +2365,8 @@
             playerDeposits[playerName].push(depositDateUTC);
           }
         });
+
+        console.log(`Players with deposits in last 15 days: ${Object.keys(playerDeposits).length}`);
 
         Object.keys(playerDeposits).forEach(player => {
           playerDeposits[player] = groupDepositsByDay(playerDeposits[player]);
@@ -2430,6 +2470,7 @@
 
         highRiskPlayers.sort((a, b) => new Date(b.lastDeposit) - new Date(a.lastDeposit));
         
+        console.log(`High risk players found: ${highRiskPlayers.length}`);
         return {
           highRiskPlayers: highRiskPlayers,
           message: `Found ${highRiskPlayers.length} high risk players`
@@ -2443,16 +2484,17 @@
 
     async function getEnhancedPlayerHistory(playerName, pageName) {
       try {
-        const { data, error } = await supabase
-          .from('deposits')
-          .select('deposit_date, amount')
-          .eq('player_name', playerName)
-          .eq('page_name', pageName)
-          .order('deposit_date', { ascending: true });
+        console.log(`Getting enhanced history for player: ${playerName} on page: ${pageName}`);
         
-        if (error) throw error;
+        // FIXED: Use pagination helper to get ALL deposits for this player
+        const allDeposits = await fetchAllRows('deposits', { 
+          player_name: playerName, 
+          page_name: pageName 
+        }, { field: 'deposit_date', ascending: true });
         
-        if (!data || data.length === 0) {
+        console.log(`Total deposits found for ${playerName}: ${allDeposits.length}`);
+        
+        if (!allDeposits || allDeposits.length === 0) {
           return { 
             enhancedHistory: [], 
             activityNotes: ["No data found for this player."],
@@ -2463,7 +2505,7 @@
           };
         }
 
-        const playerDeposits = data.map(deposit => {
+        const playerDeposits = allDeposits.map(deposit => {
           const utcDate = new Date(deposit.deposit_date);
           const pktDate = new Date(utcDate.getTime() + (5 * 60 * 60 * 1000));
           const displayDate = convertUTCToPKT(deposit.deposit_date);
@@ -2658,18 +2700,17 @@
 
     async function getPageDailyDeposits(pageName, monthOffset = 0) {
       try {
-        const { data, error } = await supabase
-          .from('deposits')
-          .select('deposit_date, amount, player_name')
-          .eq('page_name', pageName)
-          .order('deposit_date', { ascending: true });
+        console.log(`Getting daily deposits for page: ${pageName}, month offset: ${monthOffset}`);
         
-        if (error) throw error;
+        // FIXED: Use pagination helper to get ALL deposits
+        const allDeposits = await fetchAllRows('deposits', { page_name: pageName }, { field: 'deposit_date', ascending: true });
         
-        if (!data || data.length === 0) {
+        console.log(`Total deposits fetched for ${pageName}: ${allDeposits.length}`);
+        
+        if (allDeposits.length === 0) {
           return {
             success: false,
-            message: "No data found",
+            message: "No deposit data found",
             dailyDeposits: [],
             totalAmount: 0,
             totalTransactions: 0,
@@ -2678,7 +2719,7 @@
           };
         }
         
-        const allDeposits = data.map(deposit => {
+        const processedDeposits = allDeposits.map(deposit => {
           const utcDate = new Date(deposit.deposit_date);
           const pktDate = new Date(utcDate.getTime() + (5 * 60 * 60 * 1000));
           const dateKey = formatDateForGrouping(pktDate);
@@ -2696,7 +2737,7 @@
           };
         }).filter(deposit => deposit.amount > 0);
 
-        if (allDeposits.length === 0) {
+        if (processedDeposits.length === 0) {
           return {
             success: false,
             message: "No deposit data with positive amounts",
@@ -2708,8 +2749,10 @@
           };
         }
 
+        console.log(`Processed deposits with positive amounts: ${processedDeposits.length}`);
+
         const depositsByDay = {};
-        allDeposits.forEach(deposit => {
+        processedDeposits.forEach(deposit => {
           if (!depositsByDay[deposit.dateKey]) {
             depositsByDay[deposit.dateKey] = {
               date: deposit.dateKey,
@@ -2735,6 +2778,8 @@
           display: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
           page: index + 1
         }));
+        
+        console.log(`Available months: ${sortedMonths.length}`, sortedMonths);
         
         if (sortedMonths.length === 0) {
           return {
@@ -2835,6 +2880,8 @@
         
         dailyDepositsArray.sort((a, b) => b.timestamp - a.timestamp);
         
+        console.log(`Daily deposits for ${currentMonth}: ${dailyDepositsArray.length} days`);
+        
         const dailyDepositsWithTrends = dailyDepositsArray.map((day, index) => {
           let trend = null;
           
@@ -2870,6 +2917,8 @@
         const totalDaysInPeriod = dailyDepositsWithTrends.length;
         const dailyAverage = totalDaysInPeriod > 0 ? currentMonthTotal / totalDaysInPeriod : 0;
         
+        console.log(`Month ${currentMonth} summary: Total=$${currentMonthTotal.toFixed(2)}, Transactions=${currentMonthTransactions}, Days=${totalDaysInPeriod}`);
+        
         let previousMonthTotal = 0;
         let previousMonthTransactions = 0;
         let monthlyComparison = null;
@@ -2899,6 +2948,8 @@
             percentage: monthlyPercentage.toFixed(1),
             direction: monthlyDifference > 0 ? 'up' : monthlyDifference < 0 ? 'down' : 'same'
           };
+          
+          console.log(`Monthly comparison: ${currentMonth} vs ${previousMonth}: ${monthlyDifference > 0 ? '+' : ''}$${monthlyDifference.toFixed(2)} (${monthlyPercentage.toFixed(1)}%)`);
         }
         
         return {
@@ -2913,13 +2964,13 @@
           availableMonths: availableMonths,
           currentPage: currentMonthIndex + 1,
           totalPages: sortedMonths.length,
-          message: `Showing ${totalDaysInPeriod} days for ${new Date(currentMonth + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
+          message: `Showing ${totalDaysInPeriod} days for ${new Date(currentMonth + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} - Total transactions: ${currentMonthTransactions}`
         };
       } catch (error) {
         console.error('Error getting page daily deposits:', error);
         return {
           success: false,
-          message: "Error loading daily deposits",
+          message: "Error loading daily deposits: " + error.message,
           dailyDeposits: [],
           totalAmount: 0,
           totalTransactions: 0,
@@ -3907,7 +3958,7 @@
         
         <div class="table-container">
           <div class="table-header">
-            <h3 class="table-title">Daily Deposit Breakdown - ${data.currentMonth}</h3>
+            <h3 class="table-title">Daily Deposit Breakdown - ${data.currentMonth} (${data.totalTransactions} total transactions)</h3>
             <div class="pagination-controls">
               <div class="pagination-info">
                 Page ${data.currentPage} of ${data.totalPages}
