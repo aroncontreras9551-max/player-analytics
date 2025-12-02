@@ -61,7 +61,244 @@
       transition: all 0.3s ease;
     }
 
-    /* Landing Page */
+    /* =========================== */
+    /* NEW: PIN SCREEN STYLES */
+    /* =========================== */
+    #pinScreen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+      background: linear-gradient(135deg, #1a1b23 0%, #2d2e3a 100%);
+    }
+
+    .pin-container {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 3rem;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      max-width: 420px;
+      width: 100%;
+      border: 1px solid var(--border-color);
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .pin-logo {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .pin-subtitle {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      font-weight: 400;
+    }
+
+    .pin-input-container {
+      margin-bottom: 2rem;
+      position: relative;
+    }
+
+    .pin-display {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .pin-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--border-color);
+      transition: all 0.3s ease;
+    }
+
+    .pin-dot.filled {
+      background: var(--primary);
+      transform: scale(1.1);
+      box-shadow: 0 0 10px rgba(67, 97, 238, 0.3);
+    }
+
+    .pin-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      border: none;
+      outline: none;
+    }
+
+    .pin-keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .pin-key {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .pin-key:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .pin-key:active {
+      transform: translateY(0);
+    }
+
+    .pin-key.backspace {
+      font-size: 1.5rem;
+      color: var(--danger);
+    }
+
+    .pin-key.submit {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      grid-column: span 2;
+    }
+
+    .pin-key.submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .pin-status {
+      min-height: 24px;
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+    }
+
+    .pin-status.error {
+      color: var(--danger);
+      animation: shake 0.5s ease;
+    }
+
+    .pin-status.success {
+      color: var(--success);
+    }
+
+    .pin-status.locked {
+      color: var(--warning);
+      font-weight: 600;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .pin-lockout-timer {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--danger);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+
+    .pin-lockout-timer h4 {
+      color: var(--danger);
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .pin-countdown {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--danger);
+      font-family: monospace;
+      letter-spacing: 2px;
+    }
+
+    .pin-footer {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .pin-role-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-top: 1rem;
+    }
+
+    .pin-role-indicator.admin {
+      background: rgba(67, 97, 238, 0.1);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    .pin-role-indicator.viewer {
+      background: rgba(108, 117, 125, 0.1);
+      color: var(--gray);
+      border: 1px solid var(--gray);
+    }
+
+    /* Loading overlay for PIN verification */
+    .pin-loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 20px;
+      z-index: 10;
+      backdrop-filter: blur(4px);
+    }
+
+    .pin-loading-overlay.dark {
+      background: rgba(26, 27, 35, 0.9);
+    }
+
+    /* =========================== */
+    /* EXISTING LANDING PAGE STYLES */
+    /* =========================== */
     #landing {
       display: flex;
       flex-direction: column;
@@ -1250,6 +1487,11 @@
     }
 
     @media (max-width: 768px) {
+      .pin-container {
+        padding: 2rem 1.5rem;
+        max-width: 90%;
+      }
+      
       .landing-container {
         padding: 2rem 1.5rem;
       }
@@ -1312,8 +1554,76 @@
 </head>
 
 <body>
-  <!-- Landing Page -->
-  <div id="landing">
+  <!-- =========================== -->
+  <!-- NEW: PIN SCREEN (SHOWS FIRST) -->
+  <!-- =========================== -->
+  <div id="pinScreen">
+    <div class="pin-container">
+      <div class="pin-logo">
+        <i class="fas fa-chart-line"></i> Tech Pulse
+      </div>
+      <p class="pin-subtitle">Secure Access Required</p>
+      
+      <div class="pin-input-container">
+        <div class="pin-display" id="pinDisplay">
+          <div class="pin-dot" id="pinDot1"></div>
+          <div class="pin-dot" id="pinDot2"></div>
+          <div class="pin-dot" id="pinDot3"></div>
+          <div class="pin-dot" id="pinDot4"></div>
+          <div class="pin-dot" id="pinDot5"></div>
+          <div class="pin-dot" id="pinDot6"></div>
+        </div>
+        
+        <input type="password" 
+               id="pinInput" 
+               class="pin-input" 
+               maxlength="6" 
+               autocomplete="off"
+               inputmode="numeric"
+               pattern="[0-9]*">
+        
+        <div class="pin-keypad">
+          <div class="pin-key" data-key="1">1</div>
+          <div class="pin-key" data-key="2">2</div>
+          <div class="pin-key" data-key="3">3</div>
+          <div class="pin-key" data-key="4">4</div>
+          <div class="pin-key" data-key="5">5</div>
+          <div class="pin-key" data-key="6">6</div>
+          <div class="pin-key" data-key="7">7</div>
+          <div class="pin-key" data-key="8">8</div>
+          <div class="pin-key" data-key="9">9</div>
+          <div class="pin-key" data-key="0">0</div>
+          <div class="pin-key backspace" data-key="backspace">
+            <i class="fas fa-delete-left"></i>
+          </div>
+          <button class="pin-key submit" id="pinSubmit" disabled>
+            <i class="fas fa-arrow-right"></i> Enter
+          </button>
+        </div>
+        
+        <div class="pin-status" id="pinStatus">
+          Enter 6-digit PIN to continue
+        </div>
+        
+        <div id="pinLockoutTimer" class="pin-lockout-timer" style="display: none;">
+          <h4><i class="fas fa-lock"></i> Account Locked</h4>
+          <div class="pin-countdown" id="pinCountdown">10:00</div>
+          <p style="font-size: 0.875rem; margin-top: 0.5rem; color: var(--text-secondary);">
+            Too many failed attempts. Please wait.
+          </p>
+        </div>
+      </div>
+      
+      <div class="pin-footer">
+        <i class="fas fa-shield-alt"></i> Secure Marketing Analytics Dashboard
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================== -->
+  <!-- EXISTING LANDING PAGE (HIDDEN INITIALLY) -->
+  <!-- =========================== -->
+  <div id="landing" style="display: none;">
     <div class="landing-container">
       <div class="logo">
         <i class="fas fa-chart-line"></i> Tech Pulse
@@ -1350,8 +1660,10 @@
     </div>
   </div>
 
-  <!-- Dashboard -->
-  <div id="dashboard">
+  <!-- =========================== -->
+  <!-- EXISTING DASHBOARD (HIDDEN INITIALLY) -->
+  <!-- =========================== -->
+  <div id="dashboard" style="display: none;">
     <header class="dashboard-header">
       <div class="header-content">
         <h1 class="page-title" id="pageTitle"></h1>
@@ -1485,6 +1797,452 @@
   </div>
 
   <script>
+    // =============================================
+    // PIN AUTHENTICATION SYSTEM - NEW CODE
+    // =============================================
+    
+    // PIN Configuration
+    const PIN_CONFIG = {
+      ADMIN_PIN: "127432",
+      VIEWER_PIN: "815252",
+      MAX_ATTEMPTS: 3,
+      LOCKOUT_MINUTES: 10,
+      LOCKOUT_MS: 10 * 60 * 1000, // 10 minutes in milliseconds
+      PIN_LENGTH: 6
+    };
+
+    // PIN State Management
+    let pinState = {
+      currentPin: "",
+      attempts: 0,
+      isLocked: false,
+      lockoutUntil: null,
+      userRole: null, // 'admin' or 'viewer'
+      failedTimestamps: []
+    };
+
+    // DOM Elements for PIN System
+    const pinScreen = document.getElementById('pinScreen');
+    const pinInput = document.getElementById('pinInput');
+    const pinDisplay = document.getElementById('pinDisplay');
+    const pinStatus = document.getElementById('pinStatus');
+    const pinSubmit = document.getElementById('pinSubmit');
+    const pinLockoutTimer = document.getElementById('pinLockoutTimer');
+    const pinCountdown = document.getElementById('pinCountdown');
+    const pinDots = [
+      document.getElementById('pinDot1'),
+      document.getElementById('pinDot2'),
+      document.getElementById('pinDot3'),
+      document.getElementById('pinDot4'),
+      document.getElementById('pinDot5'),
+      document.getElementById('pinDot6')
+    ];
+
+    // Initialize PIN System
+    function initPinSystem() {
+      loadPinState();
+      checkLockoutStatus();
+      setupPinEventListeners();
+      
+      if (isAuthenticated()) {
+        // User already authenticated, skip PIN screen
+        const role = sessionStorage.getItem('user_role');
+        const expires = parseInt(sessionStorage.getItem('session_expires'));
+        
+        if (role && expires > Date.now()) {
+          // Valid session exists, proceed directly
+          pinState.userRole = role;
+          proceedToApplication();
+          return;
+        } else {
+          // Session expired, clear it
+          clearSession();
+        }
+      }
+      
+      // Show PIN screen
+      pinScreen.style.display = 'flex';
+      pinInput.focus();
+    }
+
+    // Load PIN state from localStorage
+    function loadPinState() {
+      try {
+        const saved = localStorage.getItem('pin_auth_state');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          pinState.attempts = parsed.attempts || 0;
+          pinState.isLocked = parsed.isLocked || false;
+          pinState.lockoutUntil = parsed.lockoutUntil ? new Date(parsed.lockoutUntil) : null;
+          pinState.failedTimestamps = parsed.failedTimestamps || [];
+        }
+      } catch (e) {
+        console.error('Error loading PIN state:', e);
+        resetPinState();
+      }
+    }
+
+    // Save PIN state to localStorage
+    function savePinState() {
+      try {
+        localStorage.setItem('pin_auth_state', JSON.stringify({
+          attempts: pinState.attempts,
+          isLocked: pinState.isLocked,
+          lockoutUntil: pinState.lockoutUntil,
+          failedTimestamps: pinState.failedTimestamps
+        }));
+      } catch (e) {
+        console.error('Error saving PIN state:', e);
+      }
+    }
+
+    // Reset PIN state
+    function resetPinState() {
+      pinState = {
+        currentPin: "",
+        attempts: 0,
+        isLocked: false,
+        lockoutUntil: null,
+        userRole: null,
+        failedTimestamps: []
+      };
+      savePinState();
+    }
+
+    // Check if user is currently locked out
+    function checkLockoutStatus() {
+      if (pinState.lockoutUntil && Date.now() < pinState.lockoutUntil) {
+        pinState.isLocked = true;
+        startLockoutTimer();
+        return true;
+      } else if (pinState.isLocked) {
+        // Lockout period has expired
+        pinState.isLocked = false;
+        pinState.lockoutUntil = null;
+        pinState.attempts = 0;
+        pinState.failedTimestamps = [];
+        savePinState();
+        updatePinUI();
+      }
+      return false;
+    }
+
+    // Start lockout timer
+    function startLockoutTimer() {
+      if (!pinState.lockoutUntil) return;
+      
+      pinLockoutTimer.style.display = 'block';
+      updateCountdown();
+      
+      const timerInterval = setInterval(() => {
+        if (!pinState.lockoutUntil || Date.now() >= pinState.lockoutUntil) {
+          clearInterval(timerInterval);
+          pinState.isLocked = false;
+          pinState.lockoutUntil = null;
+          pinState.attempts = 0;
+          pinState.failedTimestamps = [];
+          savePinState();
+          updatePinUI();
+          pinLockoutTimer.style.display = 'none';
+          pinStatus.textContent = "Lockout expired. You may try again.";
+          pinStatus.className = "pin-status";
+        } else {
+          updateCountdown();
+        }
+      }, 1000);
+    }
+
+    // Update countdown display
+    function updateCountdown() {
+      if (!pinState.lockoutUntil) return;
+      
+      const remaining = pinState.lockoutUntil - Date.now();
+      if (remaining <= 0) return;
+      
+      const minutes = Math.floor(remaining / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      pinCountdown.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    // Setup PIN event listeners
+    function setupPinEventListeners() {
+      // Keypad buttons
+      document.querySelectorAll('.pin-key[data-key]').forEach(button => {
+        button.addEventListener('click', () => {
+          const key = button.getAttribute('data-key');
+          handlePinKeyPress(key);
+        });
+      });
+
+      // Keyboard input
+      pinInput.addEventListener('input', (e) => {
+        const value = e.target.value.replace(/\D/g, '');
+        pinInput.value = value;
+        pinState.currentPin = value;
+        updatePinDisplay();
+        
+        if (pinState.currentPin.length === PIN_CONFIG.PIN_LENGTH) {
+          pinSubmit.disabled = false;
+        } else {
+          pinSubmit.disabled = true;
+        }
+      });
+
+      // Submit button
+      pinSubmit.addEventListener('click', verifyPin);
+
+      // Backspace handling
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace') {
+          e.preventDefault();
+          handlePinKeyPress('backspace');
+        } else if (e.key >= '0' && e.key <= '9') {
+          handlePinKeyPress(e.key);
+        } else if (e.key === 'Enter' && !pinSubmit.disabled) {
+          verifyPin();
+        }
+      });
+
+      // Focus management
+      pinInput.addEventListener('focus', () => {
+        pinInput.blur(); // Keep focus off the actual input
+      });
+    }
+
+    // Handle PIN key press
+    function handlePinKeyPress(key) {
+      if (pinState.isLocked) return;
+      
+      if (key === 'backspace') {
+        if (pinState.currentPin.length > 0) {
+          pinState.currentPin = pinState.currentPin.slice(0, -1);
+        }
+      } else if (key >= '0' && key <= '9') {
+        if (pinState.currentPin.length < PIN_CONFIG.PIN_LENGTH) {
+          pinState.currentPin += key;
+        }
+      }
+      
+      updatePinDisplay();
+      pinSubmit.disabled = pinState.currentPin.length !== PIN_CONFIG.PIN_LENGTH;
+    }
+
+    // Update PIN display dots
+    function updatePinDisplay() {
+      pinDots.forEach((dot, index) => {
+        if (index < pinState.currentPin.length) {
+          dot.classList.add('filled');
+        } else {
+          dot.classList.remove('filled');
+        }
+      });
+    }
+
+    // Verify PIN
+    async function verifyPin() {
+      if (pinState.isLocked) {
+        pinStatus.textContent = "Account is locked. Please wait.";
+        pinStatus.className = "pin-status locked";
+        return;
+      }
+
+      if (pinState.currentPin.length !== PIN_CONFIG.PIN_LENGTH) {
+        pinStatus.textContent = "Please enter a 6-digit PIN.";
+        pinStatus.className = "pin-status error";
+        return;
+      }
+
+      // Show loading state
+      pinSubmit.disabled = true;
+      pinSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+      pinStatus.textContent = "Verifying PIN...";
+      pinStatus.className = "pin-status";
+
+      // Simulate network delay for security
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Check PIN
+      let isValid = false;
+      let role = null;
+
+      if (pinState.currentPin === PIN_CONFIG.ADMIN_PIN) {
+        isValid = true;
+        role = 'admin';
+      } else if (pinState.currentPin === PIN_CONFIG.VIEWER_PIN) {
+        isValid = true;
+        role = 'viewer';
+      }
+
+      if (isValid) {
+        // Successful login
+        pinState.userRole = role;
+        pinState.attempts = 0;
+        pinState.failedTimestamps = [];
+        savePinState();
+        
+        // Create session
+        createSession(role);
+        
+        pinStatus.textContent = "Access granted! Redirecting...";
+        pinStatus.className = "pin-status success";
+        
+        // Proceed to application
+        setTimeout(() => {
+          proceedToApplication();
+        }, 1000);
+      } else {
+        // Failed attempt
+        pinState.attempts++;
+        pinState.failedTimestamps.push(Date.now());
+        
+        const attemptsLeft = PIN_CONFIG.MAX_ATTEMPTS - pinState.attempts;
+        
+        if (attemptsLeft > 0) {
+          pinStatus.textContent = `Incorrect PIN. ${attemptsLeft} attempt${attemptsLeft > 1 ? 's' : ''} remaining.`;
+          pinStatus.className = "pin-status error";
+          
+          // Shake animation
+          pinDisplay.style.animation = 'none';
+          setTimeout(() => {
+            pinDisplay.style.animation = 'shake 0.5s ease';
+          }, 10);
+        } else {
+          // Lockout
+          pinState.isLocked = true;
+          pinState.lockoutUntil = new Date(Date.now() + PIN_CONFIG.LOCKOUT_MS);
+          savePinState();
+          
+          pinStatus.textContent = "Too many failed attempts. Account locked.";
+          pinStatus.className = "pin-status locked";
+          startLockoutTimer();
+        }
+        
+        // Clear PIN
+        pinState.currentPin = "";
+        updatePinDisplay();
+        savePinState();
+      }
+      
+      // Reset submit button
+      pinSubmit.disabled = pinState.currentPin.length !== PIN_CONFIG.PIN_LENGTH;
+      pinSubmit.innerHTML = '<i class="fas fa-arrow-right"></i> Enter';
+    }
+
+    // Create user session
+    function createSession(role) {
+      const sessionExpires = Date.now() + (8 * 60 * 60 * 1000); // 8 hours
+      sessionStorage.setItem('user_role', role);
+      sessionStorage.setItem('session_expires', sessionExpires.toString());
+      sessionStorage.setItem('session_start', Date.now().toString());
+    }
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      const role = sessionStorage.getItem('user_role');
+      const expires = parseInt(sessionStorage.getItem('session_expires'));
+      
+      if (!role || !expires) return false;
+      if (Date.now() > expires) {
+        clearSession();
+        return false;
+      }
+      return true;
+    }
+
+    // Clear session
+    function clearSession() {
+      sessionStorage.removeItem('user_role');
+      sessionStorage.removeItem('session_expires');
+      sessionStorage.removeItem('session_start');
+    }
+
+    // Update PIN UI based on state
+    function updatePinUI() {
+      if (pinState.isLocked) {
+        pinInput.disabled = true;
+        pinSubmit.disabled = true;
+        document.querySelectorAll('.pin-key').forEach(key => {
+          key.style.pointerEvents = 'none';
+          key.style.opacity = '0.5';
+        });
+        pinLockoutTimer.style.display = 'block';
+      } else {
+        pinInput.disabled = false;
+        pinSubmit.disabled = pinState.currentPin.length !== PIN_CONFIG.PIN_LENGTH;
+        document.querySelectorAll('.pin-key').forEach(key => {
+          key.style.pointerEvents = 'auto';
+          key.style.opacity = '1';
+        });
+        pinLockoutTimer.style.display = 'none';
+        
+        const attemptsLeft = PIN_CONFIG.MAX_ATTEMPTS - pinState.attempts;
+        if (attemptsLeft < PIN_CONFIG.MAX_ATTEMPTS) {
+          pinStatus.textContent = `${attemptsLeft} attempt${attemptsLeft > 1 ? 's' : ''} remaining`;
+          pinStatus.className = "pin-status";
+        } else {
+          pinStatus.textContent = "Enter 6-digit PIN to continue";
+          pinStatus.className = "pin-status";
+        }
+      }
+    }
+
+    // Proceed to application after successful authentication
+    function proceedToApplication() {
+      // Hide PIN screen
+      pinScreen.style.display = 'none';
+      
+      // Show role indicator
+      const roleIndicator = document.createElement('div');
+      roleIndicator.className = `pin-role-indicator ${pinState.userRole}`;
+      roleIndicator.innerHTML = `
+        <i class="fas fa-user-${pinState.userRole === 'admin' ? 'shield' : 'eye'}"></i>
+        ${pinState.userRole === 'admin' ? 'Administrator Access' : 'Viewer Access'}
+      `;
+      
+      // Show landing page
+      document.getElementById('landing').style.display = 'flex';
+      
+      // Update UI based on role
+      applyRoleBasedUI();
+      
+      // Add role indicator to header if on dashboard
+      setTimeout(() => {
+        const header = document.querySelector('.header-content');
+        if (header) {
+          header.appendChild(roleIndicator);
+        }
+      }, 100);
+    }
+
+    // Apply role-based UI restrictions
+    function applyRoleBasedUI() {
+      if (pinState.userRole === 'viewer') {
+        // Disable admin-only features
+        const adminFeatures = [
+          'refreshDataBtn',
+          'forceCleanupBtn',
+          'saveNoteBtn'
+        ];
+        
+        adminFeatures.forEach(id => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.disabled = true;
+            element.title = "Viewer mode: This feature is disabled";
+          }
+        });
+        
+        // Modify notes button to be view-only
+        document.addEventListener('click', function viewerNotesHandler(e) {
+          if (e.target.closest('.notes-btn') && !e.target.closest('.notes-btn').classList.contains('has-notes')) {
+            e.preventDefault();
+            e.stopPropagation();
+            showNotification('Viewer mode: Cannot add notes', 'warning');
+          }
+        });
+      }
+    }
+
     // =============================================
     // SUPABASE CONFIGURATION
     // =============================================
@@ -2998,7 +3756,10 @@
       
       navigationContext = 'landing';
       
-      if (savedPage) {
+      // Start with PIN screen
+      initPinSystem();
+      
+      if (savedPage && isAuthenticated()) {
         selectedPage = savedPage;
         const pageObj = PAGES.find(p => p.name === savedPage);
         if (pageObj) {
@@ -3006,8 +3767,6 @@
           navigationContext = 'dashboard';
           loadDashboard(pageObj);
         }
-      } else {
-        showLandingPage();
       }
     }
 
@@ -4197,6 +4956,12 @@
 
     // Notes Modal Functions
     async function showNotesModal(playerName, buttonElement) {
+      // Check if viewer trying to add notes
+      if (pinState.userRole === 'viewer' && !buttonElement.classList.contains('has-notes')) {
+        showNotification('Viewer mode: Cannot add notes', 'warning');
+        return;
+      }
+      
       currentNotesPlayer = playerName;
       currentNotesPlayerName = playerName;
       currentNotesButton = buttonElement;
@@ -4248,6 +5013,13 @@
     }
 
     async function savePlayerNote() {
+      // Check if viewer trying to save note
+      if (pinState.userRole === 'viewer') {
+        showNotification('Viewer mode: Cannot add notes', 'warning');
+        hideNotesModal();
+        return;
+      }
+      
       const noteText = noteTextInput.value.trim();
       
       if (!noteText) {
@@ -4316,6 +5088,12 @@
 
     // Modal functions
     function showRefreshModal() {
+      // Check if viewer trying to refresh
+      if (pinState.userRole === 'viewer') {
+        showNotification('Viewer mode: Cannot refresh data', 'warning');
+        return;
+      }
+      
       if (refreshBtn.disabled) return;
       refreshPinInput.value = '';
       refreshModal.style.display = 'block';
@@ -4328,6 +5106,12 @@
     }
 
     function showCleanupModal() {
+      // Check if viewer trying to cleanup
+      if (pinState.userRole === 'viewer') {
+        showNotification('Viewer mode: Cannot perform cleanup', 'warning');
+        return;
+      }
+      
       if (forceCleanupBtn.disabled) return;
       cleanupPinInput.value = '';
       cleanupModal.style.display = 'block';
