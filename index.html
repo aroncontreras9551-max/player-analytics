@@ -61,236 +61,7 @@
       transition: all 0.3s ease;
     }
 
-    /* ===== FIXED PIN AUTHENTICATION OVERLAY ===== */
-    #pinOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      z-index: 9999;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 1.5rem;
-    }
-
-    .pin-container {
-      background: var(--bg-card);
-      border-radius: 20px;
-      padding: 2rem 2rem 1.5rem;
-      box-shadow: var(--shadow-lg);
-      text-align: center;
-      max-width: 380px;
-      width: 100%;
-      border: 1px solid var(--border-color);
-      animation: slideIn 0.3s ease-out;
-    }
-
-    @keyframes slideIn {
-      from { 
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-      }
-      to { 
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    .pin-logo {
-      font-size: 1.8rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 0.5rem;
-    }
-
-    .pin-subtitle {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      margin-bottom: 1.5rem;
-      font-weight: 400;
-      line-height: 1.4;
-    }
-
-    .pin-input-container {
-      position: relative;
-      margin-bottom: 1.5rem;
-    }
-
-    .pin-input {
-      width: 100%;
-      padding: 1rem;
-      font-size: 1.5rem;
-      text-align: center;
-      letter-spacing: 0.5rem;
-      border: 2px solid var(--border-color);
-      border-radius: 10px;
-      background: var(--bg-card);
-      color: var(--text-primary);
-      font-weight: 600;
-      transition: all 0.3s ease;
-      height: 56px;
-    }
-
-    .pin-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
-    }
-
-    .pin-input.error {
-      border-color: var(--danger);
-      animation: shake 0.5s ease-in-out;
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-      20%, 40%, 60%, 80% { transform: translateX(5px); }
-    }
-
-    .pin-keypad {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.75rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .pin-key {
-      padding: 0.9rem;
-      font-size: 1.1rem;
-      font-weight: 600;
-      border: none;
-      border-radius: 10px;
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 52px;
-    }
-
-    .pin-key:hover {
-      background: var(--primary);
-      color: white;
-      transform: translateY(-2px);
-    }
-
-    .pin-key:active {
-      transform: translateY(0);
-    }
-
-    .pin-key.clear {
-      background: var(--warning);
-      color: var(--dark);
-    }
-
-    .pin-key.enter {
-      background: var(--success);
-      color: white;
-      grid-column: span 2;
-    }
-
-    .pin-key:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-
-    .pin-error {
-      color: var(--danger);
-      font-size: 0.85rem;
-      margin-top: 0.75rem;
-      min-height: 1.25rem;
-      font-weight: 500;
-      line-height: 1.4;
-      padding: 0.5rem;
-      border-radius: 6px;
-      background: rgba(239, 71, 111, 0.1);
-      display: none;
-    }
-
-    .pin-error.show {
-      display: block;
-      animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-5px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .pin-attempts {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      margin-top: 0.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-
-    .pin-attempts.highlight {
-      color: var(--warning);
-      font-weight: 600;
-    }
-
-    .pin-attempts.lockout {
-      color: var(--danger);
-      font-weight: 600;
-    }
-
-    .pin-loading {
-      display: none;
-      width: 30px;
-      height: 30px;
-      border: 3px solid var(--border-color);
-      border-left: 3px solid var(--primary);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0.75rem auto;
-    }
-
-    .pin-success {
-      display: none;
-      color: var(--success);
-      font-size: 1rem;
-      margin: 0.75rem 0;
-      animation: fadeIn 0.5s ease;
-    }
-
-    .pin-success i {
-      font-size: 1.8rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .pin-lockout-timer {
-      display: none;
-      margin-top: 0.75rem;
-      padding: 0.5rem;
-      background: rgba(239, 71, 111, 0.1);
-      border-radius: 6px;
-      font-size: 0.8rem;
-      color: var(--danger);
-      font-weight: 500;
-    }
-
-    .pin-lockout-timer.show {
-      display: block;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .pin-lockout-timer i {
-      margin-right: 0.5rem;
-    }
-
-    /* ===== EXISTING LANDING PAGE STYLES ===== */
+    /* Landing Page */
     #landing {
       display: flex;
       flex-direction: column;
@@ -1483,11 +1254,6 @@
         padding: 2rem 1.5rem;
       }
       
-      .pin-container {
-        padding: 1.5rem;
-        max-width: 340px;
-      }
-      
       .dashboard-content {
         padding: 1rem;
       }
@@ -1546,58 +1312,6 @@
 </head>
 
 <body>
-  <!-- ===== FIXED PIN AUTHENTICATION OVERLAY ===== -->
-  <div id="pinOverlay">
-    <div class="pin-container">
-      <div class="pin-logo">
-        <i class="fas fa-chart-line"></i> Tech Pulse
-      </div>
-      <p class="pin-subtitle">Marketing Department Analytics Dashboard</p>
-      
-      <div class="pin-input-container">
-        <input type="password" 
-               id="pinInput" 
-               class="pin-input" 
-               maxlength="6" 
-               placeholder="••••••"
-               autocomplete="off"
-               readonly>
-      </div>
-      
-      <div class="pin-keypad">
-        <button class="pin-key" data-key="1">1</button>
-        <button class="pin-key" data-key="2">2</button>
-        <button class="pin-key" data-key="3">3</button>
-        <button class="pin-key" data-key="4">4</button>
-        <button class="pin-key" data-key="5">5</button>
-        <button class="pin-key" data-key="6">6</button>
-        <button class="pin-key" data-key="7">7</button>
-        <button class="pin-key" data-key="8">8</button>
-        <button class="pin-key" data-key="9">9</button>
-        <button class="pin-key clear" id="pinClear">Clear</button>
-        <button class="pin-key" data-key="0">0</button>
-        <button class="pin-key enter" id="pinEnter">Enter</button>
-      </div>
-      
-      <div id="pinLockoutTimer" class="pin-lockout-timer">
-        <i class="fas fa-clock"></i>
-        <span id="lockoutTimerText"></span>
-      </div>
-      
-      <div id="pinLoading" class="pin-loading"></div>
-      <div id="pinSuccess" class="pin-success">
-        <i class="fas fa-check-circle"></i><br>
-        Access Granted
-      </div>
-      
-      <div id="pinError" class="pin-error"></div>
-      <div id="pinAttempts" class="pin-attempts">
-        <i class="fas fa-shield-alt"></i>
-        Attempts: <span id="attemptCount">0</span>/5
-      </div>
-    </div>
-  </div>
-
   <!-- Landing Page -->
   <div id="landing">
     <div class="landing-container">
@@ -1772,22 +1486,6 @@
 
   <script>
     // =============================================
-    // FIXED PIN AUTHENTICATION SYSTEM
-    // =============================================
-    const SITE_PIN = "127432"; // Your PIN
-    const MAX_ATTEMPTS = 5;
-    const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
-    const PIN_STORAGE_KEY = "pin_verified";
-    const PIN_ATTEMPTS_KEY = "pin_attempts";
-    const PIN_LOCKOUT_KEY = "pin_lockout";
-
-    // PIN Authentication State
-    let pinAttempts = 0;
-    let isLockedOut = false;
-    let lockoutUntil = 0;
-    let lockoutTimerInterval = null;
-
-    // =============================================
     // SUPABASE CONFIGURATION
     // =============================================
     const SUPABASE_URL = "https://bwbusaawmalgfhcwdryq.supabase.co";
@@ -1909,331 +1607,6 @@
       "egames": "E-Games",
       "big winner": "Big Winner"
     };
-
-    // =============================================
-    // FIXED PIN AUTHENTICATION FUNCTIONS
-    // =============================================
-
-    function initializePinAuth() {
-      // Load and check lockout status
-      loadPinState();
-      
-      // Check if already verified in this session
-      if (sessionStorage.getItem(PIN_STORAGE_KEY) === 'true') {
-        hidePinOverlay();
-        return;
-      }
-      
-      // Show PIN overlay
-      showPinOverlay();
-      setupPinKeypad();
-      updateAttemptsDisplay();
-      
-      // Start lockout timer if needed
-      if (isLockedOut) {
-        updateLockoutTimer();
-        startLockoutTimer();
-      }
-    }
-
-    function loadPinState() {
-      // Load attempt count
-      const attemptsData = localStorage.getItem(PIN_ATTEMPTS_KEY);
-      if (attemptsData) {
-        pinAttempts = parseInt(attemptsData) || 0;
-      }
-      
-      // Check for lockout
-      const lockoutData = localStorage.getItem(PIN_LOCKOUT_KEY);
-      if (lockoutData) {
-        const { timestamp } = JSON.parse(lockoutData);
-        const now = Date.now();
-        
-        if (now - timestamp < LOCKOUT_DURATION) {
-          isLockedOut = true;
-          lockoutUntil = timestamp + LOCKOUT_DURATION;
-          disablePinInput();
-        } else {
-          // Lockout has expired, clear everything
-          clearLockoutState();
-        }
-      }
-    }
-
-    function clearLockoutState() {
-      isLockedOut = false;
-      lockoutUntil = 0;
-      pinAttempts = 0;
-      localStorage.removeItem(PIN_ATTEMPTS_KEY);
-      localStorage.removeItem(PIN_LOCKOUT_KEY);
-      enablePinInput();
-      hideLockoutTimer();
-      updateAttemptsDisplay();
-      
-      if (lockoutTimerInterval) {
-        clearInterval(lockoutTimerInterval);
-        lockoutTimerInterval = null;
-      }
-    }
-
-    function showPinOverlay() {
-      document.getElementById('pinOverlay').style.display = 'flex';
-      document.getElementById('landing').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'none';
-    }
-
-    function hidePinOverlay() {
-      document.getElementById('pinOverlay').style.display = 'none';
-      document.getElementById('landing').style.display = 'flex';
-      clearPinInput();
-      hidePinError();
-    }
-
-    function setupPinKeypad() {
-      // Number keys
-      document.querySelectorAll('.pin-key[data-key]').forEach(button => {
-        button.addEventListener('click', () => {
-          if (isLockedOut) return;
-          const key = button.getAttribute('data-key');
-          addPinDigit(key);
-        });
-      });
-      
-      // Clear button
-      document.getElementById('pinClear').addEventListener('click', clearPinInput);
-      
-      // Enter button
-      document.getElementById('pinEnter').addEventListener('click', validatePin);
-      
-      // Allow keyboard input
-      document.getElementById('pinInput').addEventListener('keydown', (e) => {
-        if (e.key >= '0' && e.key <= '9') {
-          addPinDigit(e.key);
-        } else if (e.key === 'Enter') {
-          validatePin();
-        } else if (e.key === 'Backspace' || e.key === 'Delete') {
-          clearPinInput();
-        }
-        e.preventDefault();
-      });
-      
-      // Focus on input
-      document.getElementById('pinInput').focus();
-    }
-
-    function addPinDigit(digit) {
-      if (isLockedOut) return;
-      
-      const input = document.getElementById('pinInput');
-      if (input.value.length < 6) {
-        input.value += digit;
-        updatePinDisplay();
-      }
-    }
-
-    function clearPinInput() {
-      if (isLockedOut) return;
-      
-      document.getElementById('pinInput').value = '';
-      updatePinDisplay();
-      hidePinError();
-    }
-
-    function updatePinDisplay() {
-      const input = document.getElementById('pinInput');
-      // The dots are already shown via placeholder
-    }
-
-    function validatePin() {
-      if (isLockedOut) {
-        showPinError('Account locked. Please wait and try again.');
-        return;
-      }
-      
-      const input = document.getElementById('pinInput');
-      const enteredPin = input.value;
-      
-      if (enteredPin.length !== 6) {
-        showPinError('PIN must be 6 digits');
-        input.classList.add('error');
-        setTimeout(() => input.classList.remove('error'), 500);
-        return;
-      }
-      
-      // Show loading
-      showPinLoading(true);
-      
-      // Simulate network delay for security
-      setTimeout(() => {
-        if (enteredPin === SITE_PIN) {
-          // SUCCESS - Correct PIN
-          pinAttempts = 0;
-          localStorage.removeItem(PIN_ATTEMPTS_KEY);
-          localStorage.removeItem(PIN_LOCKOUT_KEY);
-          
-          sessionStorage.setItem(PIN_STORAGE_KEY, 'true');
-          
-          showPinSuccess();
-          showPinError('');
-          
-          // Hide PIN overlay after success animation
-          setTimeout(() => {
-            hidePinOverlay();
-            showPinLoading(false);
-            hidePinSuccess();
-            clearPinInput();
-          }, 1000);
-          
-        } else {
-          // FAILED - Wrong PIN
-          pinAttempts++;
-          localStorage.setItem(PIN_ATTEMPTS_KEY, pinAttempts.toString());
-          
-          // Show clear error message
-          const attemptsRemaining = MAX_ATTEMPTS - pinAttempts;
-          if (attemptsRemaining > 0) {
-            showPinError(`Invalid PIN. ${attemptsRemaining} attempt${attemptsRemaining > 1 ? 's' : ''} remaining.`);
-          } else {
-            // Lockout after max attempts
-            isLockedOut = true;
-            const lockoutData = {
-              timestamp: Date.now()
-            };
-            localStorage.setItem(PIN_LOCKOUT_KEY, JSON.stringify(lockoutData));
-            lockoutUntil = lockoutData.timestamp + LOCKOUT_DURATION;
-            
-            showPinError('Too many failed attempts. Account locked for 15 minutes.');
-            disablePinInput();
-            showLockoutTimer();
-            startLockoutTimer();
-          }
-          
-          // Visual feedback for wrong PIN
-          input.classList.add('error');
-          setTimeout(() => input.classList.remove('error'), 500);
-          
-          // Clear input for next attempt
-          clearPinInput();
-          
-          updateAttemptsDisplay();
-          showPinLoading(false);
-        }
-      }, 500);
-    }
-
-    function showPinLoading(show) {
-      document.getElementById('pinLoading').style.display = show ? 'block' : 'none';
-    }
-
-    function showPinSuccess() {
-      document.getElementById('pinSuccess').style.display = 'block';
-    }
-
-    function hidePinSuccess() {
-      document.getElementById('pinSuccess').style.display = 'none';
-    }
-
-    function showPinError(message) {
-      const errorEl = document.getElementById('pinError');
-      errorEl.textContent = message;
-      if (message) {
-        errorEl.classList.add('show');
-      } else {
-        errorEl.classList.remove('show');
-      }
-    }
-
-    function hidePinError() {
-      document.getElementById('pinError').classList.remove('show');
-      document.getElementById('pinError').textContent = '';
-    }
-
-    function updateAttemptsDisplay() {
-      const attemptCountEl = document.getElementById('attemptCount');
-      const attemptsEl = document.getElementById('pinAttempts');
-      
-      attemptCountEl.textContent = pinAttempts;
-      
-      // Update styling based on attempts
-      attemptsEl.classList.remove('highlight', 'lockout');
-      
-      if (pinAttempts >= 3) {
-        attemptsEl.classList.add('highlight');
-      }
-      
-      if (pinAttempts >= MAX_ATTEMPTS) {
-        attemptsEl.classList.add('lockout');
-      }
-    }
-
-    function disablePinInput() {
-      const input = document.getElementById('pinInput');
-      input.disabled = true;
-      input.placeholder = 'Account Locked';
-      
-      document.querySelectorAll('.pin-key').forEach(btn => {
-        btn.disabled = true;
-        btn.style.opacity = '0.5';
-        btn.style.cursor = 'not-allowed';
-      });
-    }
-
-    function enablePinInput() {
-      const input = document.getElementById('pinInput');
-      input.disabled = false;
-      input.placeholder = '••••••';
-      
-      document.querySelectorAll('.pin-key').forEach(btn => {
-        btn.disabled = false;
-        btn.style.opacity = '1';
-        btn.style.cursor = 'pointer';
-      });
-    }
-
-    function showLockoutTimer() {
-      const timerEl = document.getElementById('pinLockoutTimer');
-      timerEl.classList.add('show');
-      updateLockoutTimer();
-    }
-
-    function hideLockoutTimer() {
-      const timerEl = document.getElementById('pinLockoutTimer');
-      timerEl.classList.remove('show');
-    }
-
-    function updateLockoutTimer() {
-      if (!isLockedOut) return;
-      
-      const now = Date.now();
-      const remaining = lockoutUntil - now;
-      
-      if (remaining <= 0) {
-        // Lockout expired
-        clearLockoutState();
-        return;
-      }
-      
-      const minutes = Math.floor(remaining / 60000);
-      const seconds = Math.floor((remaining % 60000) / 1000);
-      
-      const timerText = `Try again in ${minutes}:${seconds.toString().padStart(2, '0')}`;
-      document.getElementById('lockoutTimerText').textContent = timerText;
-    }
-
-    function startLockoutTimer() {
-      if (lockoutTimerInterval) {
-        clearInterval(lockoutTimerInterval);
-      }
-      
-      lockoutTimerInterval = setInterval(() => {
-        updateLockoutTimer();
-        
-        // Check if lockout has expired
-        if (Date.now() >= lockoutUntil) {
-          clearLockoutState();
-        }
-      }, 1000);
-    }
 
     // =============================================
     // TIME CONVERSION UTILITIES - FIXED FOR PAKISTAN TIME
@@ -2935,71 +2308,71 @@
             return;
           }
           
-      const allGaps = [];
-      const qualifyingGaps = [];
-      
-      for (let i = 0; i < deposits.length - 1; i++) {
-        const currentDeposit = deposits[i];
-        const nextDeposit = deposits[i + 1];
-        const gapHours = Math.floor((nextDeposit - currentDeposit) / (1000 * 60 * 60));
-        const gapDays = gapHours / 24;
-        allGaps.push(gapDays);
-        
-        if (gapDays >= MIN_GAP_DAYS && gapDays < HIGH_RISK_MAX_DAYS) {
-          qualifyingGaps.push({
-            gapDays: Math.floor(gapDays),
-            gapBetween: `${convertUTCToPKTDateOnly(currentDeposit.toISOString())} to ${convertUTCToPKTDateOnly(nextDeposit.toISOString())}`
-          });
-        }
-      }
-      
-      const lastDepositDate = deposits[deposits.length - 1];
-      const hoursSinceLastDeposit = Math.floor((todayUTC - lastDepositDate) / (1000 * 60 * 60));
-      const daysSinceLastDeposit = hoursSinceLastDeposit / 24;
-      
-      if (daysSinceLastDeposit >= MIN_GAP_DAYS && daysSinceLastDeposit < HIGH_RISK_MAX_DAYS) {
-        qualifyingGaps.push({
-          gapDays: Math.floor(daysSinceLastDeposit),
-          gapBetween: `${convertUTCToPKTDateOnly(lastDepositDate.toISOString())} to today`
+          const allGaps = [];
+          const qualifyingGaps = [];
+          
+          for (let i = 0; i < deposits.length - 1; i++) {
+            const currentDeposit = deposits[i];
+            const nextDeposit = deposits[i + 1];
+            const gapHours = Math.floor((nextDeposit - currentDeposit) / (1000 * 60 * 60));
+            const gapDays = gapHours / 24;
+            allGaps.push(gapDays);
+            
+            if (gapDays >= MIN_GAP_DAYS && gapDays < HIGH_RISK_MAX_DAYS) {
+              qualifyingGaps.push({
+                gapDays: Math.floor(gapDays),
+                gapBetween: `${convertUTCToPKTDateOnly(currentDeposit.toISOString())} to ${convertUTCToPKTDateOnly(nextDeposit.toISOString())}`
+              });
+            }
+          }
+          
+          const lastDepositDate = deposits[deposits.length - 1];
+          const hoursSinceLastDeposit = Math.floor((todayUTC - lastDepositDate) / (1000 * 60 * 60));
+          const daysSinceLastDeposit = hoursSinceLastDeposit / 24;
+          
+          if (daysSinceLastDeposit >= MIN_GAP_DAYS && daysSinceLastDeposit < HIGH_RISK_MAX_DAYS) {
+            qualifyingGaps.push({
+              gapDays: Math.floor(daysSinceLastDeposit),
+              gapBetween: `${convertUTCToPKTDateOnly(lastDepositDate.toISOString())} to today`
+            });
+            allGaps.push(daysSinceLastDeposit);
+          }
+          
+          const hasExcessiveGap = allGaps.some(gap => gap >= HIGH_RISK_MAX_DAYS);
+          if (hasExcessiveGap) {
+            return;
+          }
+          
+          if (qualifyingGaps.length > 0) {
+            const currentStatus = daysSinceLastDeposit <= DAYS_ACTIVE ? "Active" : "Inactive";
+            const totalDepositCount = depositDates.reduce((sum, date) => sum + depositsByDay[date].count, 0);
+            
+            highRiskPlayers.push({
+              player: player,
+              gaps: qualifyingGaps,
+              totalQualifyingGaps: qualifyingGaps.length,
+              maxGapDays: Math.max(...qualifyingGaps.map(gap => gap.gapDays)),
+              lastDeposit: lastDepositDate.toISOString(),
+              daysSinceLastDeposit: Math.floor(daysSinceLastDeposit),
+              currentStatus: currentStatus,
+              totalDeposits: totalDepositCount,
+              riskLevel: calculateRiskLevel(qualifyingGaps.length, Math.max(...qualifyingGaps.map(gap => gap.gapDays))),
+              depositType: "multiple"
+            });
+          }
         });
-        allGaps.push(daysSinceLastDeposit);
-      }
-      
-      const hasExcessiveGap = allGaps.some(gap => gap >= HIGH_RISK_MAX_DAYS);
-      if (hasExcessiveGap) {
-        return;
-      }
-      
-      if (qualifyingGaps.length > 0) {
-        const currentStatus = daysSinceLastDeposit <= DAYS_ACTIVE ? "Active" : "Inactive";
-        const totalDepositCount = depositDates.reduce((sum, date) => sum + depositsByDay[date].count, 0);
-        
-        highRiskPlayers.push({
-          player: player,
-          gaps: qualifyingGaps,
-          totalQualifyingGaps: qualifyingGaps.length,
-          maxGapDays: Math.max(...qualifyingGaps.map(gap => gap.gapDays)),
-          lastDeposit: lastDepositDate.toISOString(),
-          daysSinceLastDeposit: Math.floor(daysSinceLastDeposit),
-          currentStatus: currentStatus,
-          totalDeposits: totalDepositCount,
-          riskLevel: calculateRiskLevel(qualifyingGaps.length, Math.max(...qualifyingGaps.map(gap => gap.gapDays))),
-          depositType: "multiple"
-        });
-      }
-    });
 
-    highRiskPlayers.sort((a, b) => new Date(b.lastDeposit) - new Date(a.lastDeposit));
+        highRiskPlayers.sort((a, b) => new Date(b.lastDeposit) - new Date(a.lastDeposit));
 
-    return {
-      highRiskPlayers: highRiskPlayers,
-      message: `Found ${highRiskPlayers.length} high risk players`
-    };
-  } catch (error) {
-    console.error('Error getting high risk players:', error);
-    return { highRiskPlayers: [], message: "Error loading high risk players" };
-  }
-}
+        return {
+          highRiskPlayers: highRiskPlayers,
+          message: `Found ${highRiskPlayers.length} high risk players`
+        };
+      } catch (error) {
+        console.error('Error getting high risk players:', error);
+        return { highRiskPlayers: [], message: "Error loading high risk players" };
+      }
+    }
 
     // FIXED: Enhanced Player History Function with proper PKT timezone handling
 async function getEnhancedPlayerHistory(playerName, pageName) {
@@ -3561,9 +2934,6 @@ const shouldInclude = isCurrentMonth ?
     });
 
     function initializeApp() {
-      // First, check PIN authentication
-      initializePinAuth();
-      
       const savedPage = sessionStorage.getItem('currentPage');
       const savedView = sessionStorage.getItem('currentView');
       
@@ -3572,7 +2942,7 @@ const shouldInclude = isCurrentMonth ?
       
       navigationContext = 'landing';
       
-      if (savedPage && sessionStorage.getItem(PIN_STORAGE_KEY) === 'true') {
+      if (savedPage) {
         selectedPage = savedPage;
         const pageObj = PAGES.find(p => p.name === savedPage);
         if (pageObj) {
@@ -3603,12 +2973,6 @@ const shouldInclude = isCurrentMonth ?
     }
 
     function loadDashboard(pageObj) {
-      // Check PIN authentication first
-      if (sessionStorage.getItem(PIN_STORAGE_KEY) !== 'true') {
-        initializePinAuth();
-        return;
-      }
-      
       selectedPage = pageObj.name;
       currentPageObj = pageObj;
       sessionStorage.setItem('currentPage', selectedPage);
@@ -3831,12 +3195,6 @@ const shouldInclude = isCurrentMonth ?
     });
 
     async function showEnhancedGlobalPlayerHistory(playerName, pageName) {
-      // Check PIN authentication first
-      if (sessionStorage.getItem(PIN_STORAGE_KEY) !== 'true') {
-        initializePinAuth();
-        return;
-      }
-      
       document.getElementById('landing').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
       
@@ -3952,12 +3310,6 @@ const shouldInclude = isCurrentMonth ?
     }
 
     function findData() {
-      // Check PIN authentication first
-      if (sessionStorage.getItem(PIN_STORAGE_KEY) !== 'true') {
-        initializePinAuth();
-        return;
-      }
-      
       const val = searchInput.value.trim();
       const pageObj = PAGES.find(p => p.name.toLowerCase() === val.toLowerCase());
       
@@ -5068,8 +4420,6 @@ const shouldInclude = isCurrentMonth ?
     }
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', detectTheme);
-    
-    // Initialize theme and app
     detectTheme();
   </script>
 </body>
