@@ -1925,22 +1925,58 @@
 
     async function getPageActivity(pageName) {
       try {
+
+          // === ADD THIS DIAGNOSTIC CODE ===
+    console.group(`=== getPageActivity Debug for ${pageName} ===`);
+    console.time('getPageActivity-total');
+    console.log('Step 1: Fetching latest_status...');
+    // === END DIAGNOSTIC CODE ===
+
         // Get latest status for the page
         const { data: statusData, error: statusError } = await supabase
           .from('latest_status')
           .select('*')
           .eq('page_name', pageName);
+
+            // === ADD THIS DIAGNOSTIC CODE ===
+    console.log('Step 1 completed. Records found:', statusData?.length || 0);
+    console.time('step2-deposits');
+    // === END DIAGNOSTIC CODE ===
         
         if (statusError) throw statusError;
         
         if (!statusData || statusData.length === 0) {
+
+          // === ADD THIS DIAGNOSTIC CODE ===
+      console.log('No data found, returning empty.');
+      console.timeEnd('getPageActivity-total');
+      console.groupEnd();
+      // === END DIAGNOSTIC CODE ===
+
           return getEmptyPageData(pageName);
         }
 
+        // === ADD THIS DIAGNOSTIC CODE ===
+    console.log('Step 2: Computing player deposits...');
+    // === END DIAGNOSTIC CODE ===
+
         // Get deposit data for calculations
         const depositData = await computePlayerDeposits(pageName);
+
+         // === ADD THIS DIAGNOSTIC CODE ===
+    console.log('Step 2 completed. Deposit data keys:', Object.keys(depositData).length);
+    console.timeEnd('step2-deposits');
+    console.time('step3-notes');
+    // === END DIAGNOSTIC CODE ===
+
         const playersWithNotes = await getAllPlayersWithNotes(pageName);
         
+          // === ADD THIS DIAGNOSTIC CODE ===
+    console.log('Step 3: Notes loaded. Players with notes:', Object.keys(playersWithNotes).length);
+    console.timeEnd('step3-notes');
+    console.time('step4-status-changes');
+    // === END DIAGNOSTIC CODE ===
+
         // Get status changes for this page to show in activity notes
         const { data: changesData } = await supabase
           .from('status_changes')
@@ -1948,6 +1984,13 @@
           .eq('page_name', pageName)
           .order('change_date', { ascending: false })
           .limit(100);
+
+          // === ADD THIS DIAGNOSTIC CODE ===
+    console.log('Step 4: Status changes loaded:', changesData?.length || 0);
+    console.timeEnd('step4-status-changes');
+    console.time('step5-high-risk');
+    // === END DIAGNOSTIC CODE ===
+
 
         // Create a map of recent status changes per player
         const recentChanges = {};
@@ -2013,6 +2056,24 @@
         const highRiskData = await getHighRiskPlayers(pageName);
         const highRiskPlayers = highRiskData.highRiskPlayers || [];
 
+        // === ADD THIS DIAGNOSTIC CODE ===
+    console.log('Step 5: High risk players loaded:', highRiskPlayers.length);
+    console.timeEnd('step5-high-risk');
+    
+    // Final counts
+    console.log('=== FINAL COUNTS ===');
+    console.log('Total players:', resultPlayers.length);
+    console.log('Active players:', resultPlayers.filter(p => p.status === "Active").length);
+    console.log('Inactive players (15+ days):', resultPlayers.filter(p => p.status === "Inactive" && p.daysSince >= INACTIVE_THRESHOLD).length);
+    console.log('Recent Active:', recentActivePlayers.length);
+    console.log('Recent Inactive:', recentInactivePlayers.length);
+    console.log('High Risk:', highRiskPlayers.length);
+    
+    console.timeEnd('getPageActivity-total');
+    console.groupEnd();
+    // === END DIAGNOSTIC CODE ===
+
+
         highRiskPlayers.forEach(player => {
           player.hasNotes = playersWithNotes[player.player] || false;
         });
@@ -2041,6 +2102,13 @@
           highRiskPlayers: highRiskPlayers
         };
       } catch (error) {
+
+          // === ADD THIS DIAGNOSTIC CODE ===
+    console.error('Error in getPageActivity:', error);
+    console.timeEnd('getPageActivity-total');
+    console.groupEnd();
+    // === END DIAGNOSTIC CODE ===
+
         console.error('Error getting page activity:', error);
         showNotification('Error loading page data', 'error');
         return getEmptyPageData(pageName);
@@ -3008,6 +3076,12 @@ const shouldInclude = isCurrentMonth ?
 
     async function loadDashboardData() {
       if (!selectedPage) return;
+
+       // === ADD THIS DIAGNOSTIC CODE ===
+  console.group(`=== Dashboard Load Debug for ${selectedPage} ===`);
+  console.log(`Start time: ${new Date().toISOString()}`);
+  console.time('dashboard-load-total');
+  // === END DIAGNOSTIC CODE ===
       
       showLoader();
       clearBackContainer();
@@ -3015,8 +3089,24 @@ const shouldInclude = isCurrentMonth ?
       
       try {
         const data = await getPageActivity(selectedPage);
+// === ADD THIS DIAGNOSTIC CODE ===
+    console.log(`Data loaded at: ${new Date().toISOString()}`);
+    console.log('Counts received:', data.counts);
+    console.log('Players array length:', data.players?.length || 0);
+    console.log('Recent Active players:', data.recentActivePlayers?.length || 0);
+    console.log('Recent Inactive players:', data.recentInactivePlayers?.length || 0);
+    console.log('High Risk players:', data.highRiskPlayers?.length || 0);
+    console.timeEnd('dashboard-load-total');
+    // === END DIAGNOSTIC CODE ===
+
         handleDashboardData(data);
       } catch (error) {
+
+            // === ADD THIS DIAGNOSTIC CODE ===
+    console.error('Error in loadDashboardData:', error);
+    console.timeEnd('dashboard-load-total');
+    console.groupEnd();
+    // === END DIAGNOSTIC CODE ===
         handleDataError(error);
       }
     }
