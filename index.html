@@ -1793,8 +1793,8 @@
     
     // PINs from Vercel Environment Variables
     // IMPORTANT: Add these in Vercel Dashboard → Settings → Environment Variables
-    const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || "234721";
-    const VIEWER_PIN = import.meta.env.VITE_VIEWER_PIN || "815252";
+    const ADMIN_PIN = "234721";  // Fallback for direct HTML access
+const VIEWER_PIN = "815252"; // Fallback for direct HTML access
     
     // Authentication state
     const authState = {
