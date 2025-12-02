@@ -2127,17 +2127,39 @@
     }
 
     async function computePlayerDeposits(pageName) {
+
+        // === ADD THIS AT THE BEGINNING ===
+  console.group(`=== computePlayerDeposits Debug for ${pageName} ===`);
+  console.time('deposits-query');
+  // === END ADDITION ===
+
       try {
         const { data, error } = await supabase
           .from('deposits')
           .select('player_name, amount, deposit_date')
           .eq('page_name', pageName);
+
+          // === ADD THIS AFTER THE QUERY ===
+    console.log('Query completed. Data rows received:', data?.length || 0);
+    console.timeEnd('deposits-query');
+    
+    if (data && data.length > 0) {
+      const uniquePlayers = new Set(data.map(d => d.player_name));
+      console.log('Unique players in deposits:', uniquePlayers.size);
+      console.log('Sample of player names:', Array.from(uniquePlayers).slice(0, 5));
+    }
+    // === END ADDITION ===
         
         if (error) throw error;
         
         const depositData = {};
         const todayUTC = new Date();
         const sevenDaysAgo = new Date(todayUTC.getTime() - (7 * 24 * 60 * 60 * 1000));
+
+         // === ADD THIS BEFORE forEach ===
+    let processedPlayers = 0;
+    let playersWithMultipleDeposits = 0;
+    // === END ADDITION ===
         
         data.forEach(deposit => {
           const playerName = deposit.player_name;
@@ -2146,8 +2168,10 @@
           
           if (!depositData[playerName]) {
             depositData[playerName] = { total: 0, last7Days: 0, deposits: [] };
-          }
-          
+            processedPlayers++; // === ADD THIS LINE ===
+      } else {
+        playersWithMultipleDeposits++; // === ADD THIS LINE ===
+      }   
           depositData[playerName].total += amount;
           depositData[playerName].deposits.push(depositDateUTC);
           
@@ -2155,9 +2179,22 @@
             depositData[playerName].last7Days += amount;
           }
         });
+
+
+         // === ADD THIS BEFORE return ===
+    console.log('Processed players in function:', processedPlayers);
+    console.log('Players with multiple deposits:', playersWithMultipleDeposits);
+    console.log('Deposit data keys (should match processedPlayers):', Object.keys(depositData).length);
+    console.groupEnd();
+    // === END ADDITION ===
         
         return depositData;
       } catch (error) {
+// === ADD THIS IN CATCH ===
+    console.error('Error in computePlayerDeposits:', error);
+    console.groupEnd();
+    // === END ADDITION ===
+
         console.error('Error computing player deposits:', error);
         return {};
       }
