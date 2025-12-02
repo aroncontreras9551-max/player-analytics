@@ -2318,57 +2318,58 @@
 
     // FIXED: Properly group deposits by day without duplicates
     function groupDepositsByDay(deposits) {
-      const depositsByDay = {};
-      
-      deposits.forEach(deposit => {
-        // Convert UTC to PKT for grouping
-        const pktDate = new Date(deposit.getTime() + (5 * 60 * 60 * 1000));
-        const dateKey = formatDateForGrouping(pktDate);
-        
-        if (!depositsByDay[dateKey]) {
-          depositsByDay[dateKey] = {
-            date: dateKey,
-            deposits: [deposit],
-            count: 1
-          };
-        } else {
-          depositsByDay[dateKey].deposits.push(deposit);
-          depositsByDay[dateKey].count++;
-        }
-      });
-      
-      return depositsByDay;
+  const depositsByDay = {};
+  
+  deposits.forEach(deposit => {
+    // Convert UTC to PKT for grouping
+    const pktDate = new Date(deposit.getTime() + (5 * 60 * 60 * 1000));
+    const dateKey = formatDateForGrouping(pktDate);
+    
+    if (!depositsByDay[dateKey]) {
+      depositsByDay[dateKey] = {
+        date: dateKey,
+        deposits: [deposit],
+        count: 1
+      };
+    } else {
+      depositsByDay[dateKey].deposits.push(deposit);
+      depositsByDay[dateKey].count++;
     }
+  });
+  
+  return depositsByDay;
+}
 
     function calculateRiskLevel(totalGaps, maxGapDays) {
-      if (totalGaps === 1 && maxGapDays < 15) {
-        if (maxGapDays >= 12) return "Very High";
-        if (maxGapDays >= 10) return "High";
-        if (maxGapDays >= 8) return "Medium";
-        if (maxGapDays >= 5) return "Low";
-      }
-      
-      if (totalGaps >= 3 || maxGapDays >= 12) {
-        return "Very High";
-      } else if (totalGaps >= 2 || maxGapDays >= 10) {
-        return "High";
-      } else if (totalGaps >= 1 && maxGapDays >= 8) {
-        return "Medium";
-      } else {
-        return "Low";
-      }
-    }
+  if (totalGaps === 1 && maxGapDays < 15) {
+    if (maxGapDays >= 12) return "Very High";
+    if (maxGapDays >= 10) return "High";
+    if (maxGapDays >= 8) return "Medium";
+    if (maxGapDays >= 5) return "Low";
+  }
+  
+  if (totalGaps >= 3 || maxGapDays >= 12) {
+    return "Very High";
+  } else if (totalGaps >= 2 || maxGapDays >= 10) {
+    return "High";
+  } else if (totalGaps >= 1 && maxGapDays >= 8) {
+    return "Medium";
+  } else {
+    return "Low";
+  }
+}
 
     async function getHighRiskPlayers(pageName) {
   try {
     console.group(`=== getHighRiskPlayers Debug for ${pageName} ===`);
+    console.time('high-risk-query');
     
+    // 1. PAGINATE through ALL deposits
     let allDeposits = [];
     let currentPage = 0;
     const pageSize = 1000;
     let hasMore = true;
     
-    // Paginate through all deposits
     while (hasMore) {
       const { data, error } = await supabase
         .from('deposits')
@@ -2380,23 +2381,159 @@
       
       if (data && data.length > 0) {
         allDeposits = [...allDeposits, ...data];
+        console.log(`High Risk - Page ${currentPage + 1}: ${data.length} deposits`);
         
         if (data.length < pageSize) {
           hasMore = false;
+          console.log(`High Risk - Last page. Total deposits: ${allDeposits.length}`);
         } else {
           currentPage++;
         }
       } else {
         hasMore = false;
+        console.log(`High Risk - No more data. Total deposits: ${allDeposits.length}`);
       }
     }
     
-    console.log(`Total deposits for high risk analysis: ${allDeposits.length}`);
+    console.timeEnd('high-risk-query');
+    console.log(`High Risk - Total deposits retrieved: ${allDeposits.length}`);
     
-    // ... rest of your existing getHighRiskPlayers logic ...
-    // Keep all your existing processing code
+    if (allDeposits.length === 0) {
+      console.log('No deposits found for high risk analysis');
+      console.groupEnd();
+      return { highRiskPlayers: [], message: "No deposit data available" };
+    }
+    
+    // 2. Group deposits by player
+    const playerDeposits = {};
+    const todayUTC = new Date();
+    const fifteenDaysAgo = new Date(todayUTC.getTime() - (HIGH_RISK_MAX_DAYS * 24 * 60 * 60 * 1000));
+    
+    allDeposits.forEach(deposit => {
+      const playerName = deposit.player_name;
+      const depositDateUTC = new Date(deposit.deposit_date);
+      
+      if (!isNaN(depositDateUTC?.getTime()) && depositDateUTC >= fifteenDaysAgo) {
+        if (!playerDeposits[playerName]) {
+          playerDeposits[playerName] = [];
+        }
+        playerDeposits[playerName].push(depositDateUTC);
+      }
+    });
+
+    // 3. Group deposits by day (to avoid duplicate days)
+    Object.keys(playerDeposits).forEach(player => {
+      playerDeposits[player] = groupDepositsByDay(playerDeposits[player]);
+    });
+
+    // 4. Analyze for high risk patterns
+    const highRiskPlayers = [];
+    const MIN_GAP_DAYS = 5;
+
+    Object.keys(playerDeposits).forEach(player => {
+      const depositsByDay = playerDeposits[player];
+      const depositDates = Object.keys(depositsByDay).sort();
+      
+      if (depositDates.length === 0) return;
+
+      const deposits = depositDates.map(date => {
+        const dayData = depositsByDay[date];
+        // Use the latest deposit time for that day
+        const latestDeposit = dayData.deposits.sort((a, b) => b - a)[0];
+        return latestDeposit;
+      }).sort((a, b) => a - b);
+      
+      if (deposits.length === 1) {
+        const singleDepositDate = deposits[0];
+        const hoursSinceSingleDeposit = Math.floor((todayUTC - singleDepositDate) / (1000 * 60 * 60));
+        const daysSinceSingleDeposit = hoursSinceSingleDeposit / 24;
+        
+        if (daysSinceSingleDeposit >= MIN_GAP_DAYS && daysSinceSingleDeposit < HIGH_RISK_MAX_DAYS) {
+          const currentStatus = daysSinceSingleDeposit <= DAYS_ACTIVE ? "Active" : "Inactive";
+          
+          highRiskPlayers.push({
+            player: player,
+            gaps: [{
+              gapDays: Math.floor(daysSinceSingleDeposit),
+              gapBetween: `Single activity day on ${convertUTCToPKTDateOnly(singleDepositDate.toISOString())}`
+            }],
+            totalQualifyingGaps: 1,
+            maxGapDays: Math.floor(daysSinceSingleDeposit),
+            lastDeposit: singleDepositDate.toISOString(),
+            daysSinceLastDeposit: Math.floor(daysSinceSingleDeposit),
+            currentStatus: currentStatus,
+            totalDeposits: depositsByDay[depositDates[0]].count,
+            riskLevel: calculateRiskLevel(1, Math.floor(daysSinceSingleDeposit)),
+            depositType: "single"
+          });
+        }
+        return;
+      }
+      
+      const allGaps = [];
+      const qualifyingGaps = [];
+      
+      for (let i = 0; i < deposits.length - 1; i++) {
+        const currentDeposit = deposits[i];
+        const nextDeposit = deposits[i + 1];
+        const gapHours = Math.floor((nextDeposit - currentDeposit) / (1000 * 60 * 60));
+        const gapDays = gapHours / 24;
+        allGaps.push(gapDays);
+        
+        if (gapDays >= MIN_GAP_DAYS && gapDays < HIGH_RISK_MAX_DAYS) {
+          qualifyingGaps.push({
+            gapDays: Math.floor(gapDays),
+            gapBetween: `${convertUTCToPKTDateOnly(currentDeposit.toISOString())} to ${convertUTCToPKTDateOnly(nextDeposit.toISOString())}`
+          });
+        }
+      }
+      
+      const lastDepositDate = deposits[deposits.length - 1];
+      const hoursSinceLastDeposit = Math.floor((todayUTC - lastDepositDate) / (1000 * 60 * 60));
+      const daysSinceLastDeposit = hoursSinceLastDeposit / 24;
+      
+      if (daysSinceLastDeposit >= MIN_GAP_DAYS && daysSinceLastDeposit < HIGH_RISK_MAX_DAYS) {
+        qualifyingGaps.push({
+          gapDays: Math.floor(daysSinceLastDeposit),
+          gapBetween: `${convertUTCToPKTDateOnly(lastDepositDate.toISOString())} to today`
+        });
+        allGaps.push(daysSinceLastDeposit);
+      }
+      
+      const hasExcessiveGap = allGaps.some(gap => gap >= HIGH_RISK_MAX_DAYS);
+      if (hasExcessiveGap) {
+        return;
+      }
+      
+      if (qualifyingGaps.length > 0) {
+        const currentStatus = daysSinceLastDeposit <= DAYS_ACTIVE ? "Active" : "Inactive";
+        const totalDepositCount = depositDates.reduce((sum, date) => sum + depositsByDay[date].count, 0);
+        
+        highRiskPlayers.push({
+          player: player,
+          gaps: qualifyingGaps,
+          totalQualifyingGaps: qualifyingGaps.length,
+          maxGapDays: Math.max(...qualifyingGaps.map(gap => gap.gapDays)),
+          lastDeposit: lastDepositDate.toISOString(),
+          daysSinceLastDeposit: Math.floor(daysSinceLastDeposit),
+          currentStatus: currentStatus,
+          totalDeposits: totalDepositCount,
+          riskLevel: calculateRiskLevel(qualifyingGaps.length, Math.max(...qualifyingGaps.map(gap => gap.gapDays))),
+          depositType: "multiple"
+        });
+      }
+    });
+
+    // 5. Sort by most recent deposit
+    highRiskPlayers.sort((a, b) => new Date(b.lastDeposit) - new Date(a.lastDeposit));
+
+    console.log(`High Risk Analysis Complete:`);
+    console.log(`- Total players with deposits: ${Object.keys(playerDeposits).length}`);
+    console.log(`- High risk players found: ${highRiskPlayers.length}`);
+    console.log(`- Sample of high risk players:`, highRiskPlayers.slice(0, 3).map(p => p.player));
     
     console.groupEnd();
+    
     return {
       highRiskPlayers: highRiskPlayers,
       message: `Found ${highRiskPlayers.length} high risk players`
@@ -2404,7 +2541,8 @@
     
   } catch (error) {
     console.error('Error getting high risk players:', error);
-    return { highRiskPlayers: [], message: "Error loading high risk players" };
+    console.groupEnd();
+    return { highRiskPlayers: [], message: "Error loading high risk players: " + error.message };
   }
 }
 
