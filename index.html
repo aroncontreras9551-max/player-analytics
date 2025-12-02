@@ -1787,406 +1787,406 @@
   </div>
 
   <script>
-    // =============================================
-    // PIN AUTHENTICATION SYSTEM
-    // =============================================
+  // =============================================
+  // PIN AUTHENTICATION SYSTEM
+  // =============================================
+  
+  // PINs from Vercel Environment Variables or fallback
+  // In production, Vite will replace these during build
+  const ADMIN_PIN = "234721";  // Will be replaced by VITE_ADMIN_PIN from env
+  const VIEWER_PIN = "815252"; // Will be replaced by VITE_VIEWER_PIN from env
+  
+  // Authentication state
+  const authState = {
+    currentRole: null,
+    attempts: 0,
+    maxAttempts: 3,
+    lockDuration: 10 * 60 * 1000, // 10 minutes in milliseconds
+    isLocked: false,
+    lockUntil: null,
+    lastAttemptTime: null
+  };
+  
+  // DOM Elements for PIN System
+  const pinAuth = document.getElementById('pinAuth');
+  const pinInput = document.getElementById('pinInput');
+  const pinDots = document.getElementById('pinDots');
+  const pinFeedback = document.getElementById('pinFeedback');
+  const attemptsCounter = document.getElementById('attemptsCounter');
+  const remainingAttempts = document.getElementById('remainingAttempts');
+  const submitPinBtn = document.getElementById('submitPinBtn');
+  const submitText = document.getElementById('submitText');
+  const pinSpinner = document.getElementById('pinSpinner');
+  const lockScreen = document.getElementById('lockScreen');
+  const countdownTimer = document.getElementById('countdownTimer');
+  const pinEntry = document.getElementById('pinEntry');
+  const userRoleBadge = document.getElementById('userRoleBadge');
+  
+  // =============================================
+  // PIN SYSTEM FUNCTIONS
+  // =============================================
+  
+  function initializeAuth() {
+    loadAuthState();
+    checkLockStatus();
+    setupPinInputListeners();
+    updatePinDots();
     
-    // PINs from Vercel Environment Variables
-    // IMPORTANT: Add these in Vercel Dashboard → Settings → Environment Variables
-    const ADMIN_PIN = "234721";  // Fallback for direct HTML access
-const VIEWER_PIN = "815252"; // Fallback for direct HTML access
+    // Focus on PIN input
+    setTimeout(() => {
+      pinInput.focus();
+    }, 100);
+  }
+  
+  function loadAuthState() {
+    try {
+      const savedState = localStorage.getItem('auth_state');
+      if (savedState) {
+        const parsed = JSON.parse(savedState);
+        authState.attempts = parsed.attempts || 0;
+        authState.isLocked = parsed.isLocked || false;
+        authState.lockUntil = parsed.lockUntil ? new Date(parsed.lockUntil) : null;
+        authState.lastAttemptTime = parsed.lastAttemptTime ? new Date(parsed.lastAttemptTime) : null;
+      }
+      
+      // Check current role
+      const role = sessionStorage.getItem('user_role');
+      const verified = sessionStorage.getItem('pin_verified');
+      
+      if (role && verified === 'true') {
+        authState.currentRole = role;
+        // If already authenticated, skip PIN screen
+        grantAccess(role);
+      }
+    } catch (error) {
+      console.error('Error loading auth state:', error);
+      resetAuthState();
+    }
+  }
+  
+  function saveAuthState() {
+    try {
+      localStorage.setItem('auth_state', JSON.stringify({
+        attempts: authState.attempts,
+        isLocked: authState.isLocked,
+        lockUntil: authState.lockUntil,
+        lastAttemptTime: authState.lastAttemptTime
+      }));
+    } catch (error) {
+      console.error('Error saving auth state:', error);
+    }
+  }
+  
+  function resetAuthState() {
+    authState.attempts = 0;
+    authState.isLocked = false;
+    authState.lockUntil = null;
+    authState.lastAttemptTime = null;
+    saveAuthState();
+  }
+  
+  function checkLockStatus() {
+    if (!authState.isLocked || !authState.lockUntil) return;
     
-    // Authentication state
-    const authState = {
-      currentRole: null,
-      attempts: 0,
-      maxAttempts: 3,
-      lockDuration: 10 * 60 * 1000, // 10 minutes in milliseconds
-      isLocked: false,
-      lockUntil: null,
-      lastAttemptTime: null
-    };
-    
-    // DOM Elements for PIN System
-    const pinAuth = document.getElementById('pinAuth');
-    const pinInput = document.getElementById('pinInput');
-    const pinDots = document.getElementById('pinDots');
-    const pinFeedback = document.getElementById('pinFeedback');
-    const attemptsCounter = document.getElementById('attemptsCounter');
-    const remainingAttempts = document.getElementById('remainingAttempts');
-    const submitPinBtn = document.getElementById('submitPinBtn');
-    const submitText = document.getElementById('submitText');
-    const pinSpinner = document.getElementById('pinSpinner');
-    const lockScreen = document.getElementById('lockScreen');
-    const countdownTimer = document.getElementById('countdownTimer');
-    const pinEntry = document.getElementById('pinEntry');
-    const userRoleBadge = document.getElementById('userRoleBadge');
-    
-    // =============================================
-    // PIN SYSTEM FUNCTIONS
-    // =============================================
-    
-    function initializeAuth() {
-      loadAuthState();
-      checkLockStatus();
-      setupPinInputListeners();
+    const now = new Date();
+    if (now < authState.lockUntil) {
+      // Still locked, show lock screen
+      showLockScreen();
+      startCountdown();
+    } else {
+      // Lock expired
+      authState.isLocked = false;
+      authState.attempts = 0;
+      authState.lockUntil = null;
+      saveAuthState();
+      showPinEntry();
+    }
+  }
+  
+  function setupPinInputListeners() {
+    pinInput.addEventListener('input', function() {
+      const value = this.value.replace(/\D/g, ''); // Remove non-digits
+      this.value = value.substring(0, 6); // Limit to 6 digits
       updatePinDots();
       
-      // Focus on PIN input
-      setTimeout(() => {
-        pinInput.focus();
-      }, 100);
-    }
-    
-    function loadAuthState() {
-      try {
-        const savedState = localStorage.getItem('auth_state');
-        if (savedState) {
-          const parsed = JSON.parse(savedState);
-          authState.attempts = parsed.attempts || 0;
-          authState.isLocked = parsed.isLocked || false;
-          authState.lockUntil = parsed.lockUntil ? new Date(parsed.lockUntil) : null;
-          authState.lastAttemptTime = parsed.lastAttemptTime ? new Date(parsed.lastAttemptTime) : null;
-        }
-        
-        // Check current role
-        const role = sessionStorage.getItem('user_role');
-        const verified = sessionStorage.getItem('pin_verified');
-        
-        if (role && verified === 'true') {
-          authState.currentRole = role;
-          // If already authenticated, skip PIN screen
-          grantAccess(role);
-        }
-      } catch (error) {
-        console.error('Error loading auth state:', error);
-        resetAuthState();
+      // Auto-submit when 6 digits entered
+      if (value.length === 6) {
+        setTimeout(verifyPin, 100);
       }
-    }
+    });
     
-    function saveAuthState() {
-      try {
-        localStorage.setItem('auth_state', JSON.stringify({
-          attempts: authState.attempts,
-          isLocked: authState.isLocked,
-          lockUntil: authState.lockUntil,
-          lastAttemptTime: authState.lastAttemptTime
-        }));
-      } catch (error) {
-        console.error('Error saving auth state:', error);
+    pinInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && this.value.length === 6) {
+        verifyPin();
       }
-    }
-    
-    function resetAuthState() {
-      authState.attempts = 0;
-      authState.isLocked = false;
-      authState.lockUntil = null;
-      authState.lastAttemptTime = null;
-      saveAuthState();
-    }
-    
-    function checkLockStatus() {
-      if (!authState.isLocked || !authState.lockUntil) return;
       
+      // Allow backspace and delete
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        setTimeout(updatePinDots, 0);
+      }
+    });
+    
+    submitPinBtn.addEventListener('click', verifyPin);
+    
+    // Prevent paste to avoid cheating
+    pinInput.addEventListener('paste', function(e) {
+      e.preventDefault();
+      showFeedback('Paste is disabled for security', 'error');
+    });
+  }
+  
+  function updatePinDots() {
+    const dots = pinDots.querySelectorAll('.pin-dot');
+    const value = pinInput.value;
+    
+    dots.forEach((dot, index) => {
+      if (index < value.length) {
+        dot.classList.add('filled');
+      } else {
+        dot.classList.remove('filled');
+      }
+    });
+  }
+  
+  function verifyPin() {
+    if (authState.isLocked) return;
+    
+    const pin = pinInput.value;
+    if (pin.length !== 6) {
+      showFeedback('Please enter 6-digit PIN', 'error');
+      shakeInput();
+      return;
+    }
+    
+    // Check rate limiting (30 seconds between attempts after 1st wrong)
+    if (authState.attempts > 0 && authState.lastAttemptTime) {
       const now = new Date();
-      if (now < authState.lockUntil) {
-        // Still locked, show lock screen
+      const timeSinceLastAttempt = now - authState.lastAttemptTime;
+      const minWaitTime = 30 * 1000; // 30 seconds
+      
+      if (timeSinceLastAttempt < minWaitTime) {
+        const waitSeconds = Math.ceil((minWaitTime - timeSinceLastAttempt) / 1000);
+        showFeedback(`Please wait ${waitSeconds} seconds before trying again`, 'warning');
+        return;
+      }
+    }
+    
+    // Show loading state
+    submitText.textContent = 'Verifying...';
+    pinSpinner.style.display = 'block';
+    submitPinBtn.disabled = true;
+    
+    // Simulate network delay for better UX
+    setTimeout(() => {
+      processPinVerification(pin);
+    }, 800);
+  }
+  
+  function processPinVerification(pin) {
+    let role = null;
+    
+    // Check PINs (in production, these come from Vercel env vars)
+    if (pin === ADMIN_PIN) {
+      role = 'admin';
+    } else if (pin === VIEWER_PIN) {
+      role = 'viewer';
+    }
+    
+    if (role) {
+      // Successful authentication
+      authState.attempts = 0;
+      authState.lastAttemptTime = new Date();
+      saveAuthState();
+      
+      showFeedback(`Access granted as ${role === 'admin' ? 'Administrator' : 'Viewer'}`, 'success');
+      setTimeout(() => {
+        grantAccess(role);
+      }, 1000);
+    } else {
+      // Failed authentication
+      authState.attempts++;
+      authState.lastAttemptTime = new Date();
+      
+      if (authState.attempts >= authState.maxAttempts) {
+        // Lock user out
+        authState.isLocked = true;
+        authState.lockUntil = new Date(Date.now() + authState.lockDuration);
+        saveAuthState();
+        
         showLockScreen();
         startCountdown();
+        showFeedback('Too many incorrect attempts. Account locked for 10 minutes.', 'error');
       } else {
+        const remaining = authState.maxAttempts - authState.attempts;
+        showFeedback(`Incorrect PIN. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`, 'error');
+        shakeInput();
+        updateAttemptsCounter();
+        saveAuthState();
+      }
+      
+      // Reset UI
+      resetPinInput();
+    }
+    
+    // Reset button state
+    submitText.textContent = 'Access Dashboard';
+    pinSpinner.style.display = 'none';
+    submitPinBtn.disabled = false;
+  }
+  
+  function grantAccess(role) {
+    // Store authentication state
+    sessionStorage.setItem('user_role', role);
+    sessionStorage.setItem('pin_verified', 'true');
+    authState.currentRole = role;
+    
+    // Update UI based on role
+    updateUIForRole(role);
+    
+    // Hide PIN screen, show landing page
+    pinAuth.style.display = 'none';
+    document.getElementById('landing').style.display = 'flex';
+    
+    // Show role badge
+    showRoleBadge(role);
+  }
+  
+  function updateUIForRole(role) {
+    // This will be used later to disable features for viewers
+    console.log(`User logged in as: ${role}`);
+    
+    if (role === 'viewer') {
+      // Disable sensitive operations for viewers
+      document.getElementById('refreshDataBtn').style.display = 'none';
+      document.getElementById('forceCleanupBtn').style.display = 'none';
+      
+      // Note: We'll also disable note buttons in the main code
+    }
+  }
+  
+  function showRoleBadge(role) {
+    if (role === 'admin') {
+      userRoleBadge.innerHTML = `
+        <div class="role-badge admin">
+          <i class="fas fa-user-shield"></i> Administrator Mode
+        </div>
+      `;
+    } else if (role === 'viewer') {
+      userRoleBadge.innerHTML = `
+        <div class="role-badge viewer">
+          <i class="fas fa-eye"></i> View-Only Mode
+        </div>
+      `;
+    }
+    userRoleBadge.style.display = 'block';
+  }
+  
+  function showLockScreen() {
+    pinEntry.style.display = 'none';
+    lockScreen.style.display = 'block';
+    pinInput.disabled = true;
+    submitPinBtn.disabled = true;
+  }
+  
+  function showPinEntry() {
+    pinEntry.style.display = 'block';
+    lockScreen.style.display = 'none';
+    pinInput.disabled = false;
+    submitPinBtn.disabled = false;
+    resetPinInput();
+    updateAttemptsCounter();
+  }
+  
+  function startCountdown() {
+    const updateTimer = () => {
+      if (!authState.isLocked || !authState.lockUntil) {
+        countdownTimer.textContent = '00:00';
+        return;
+      }
+      
+      const now = new Date();
+      const remaining = authState.lockUntil - now;
+      
+      if (remaining <= 0) {
         // Lock expired
         authState.isLocked = false;
         authState.attempts = 0;
         authState.lockUntil = null;
         saveAuthState();
         showPinEntry();
-      }
-    }
-    
-    function setupPinInputListeners() {
-      pinInput.addEventListener('input', function() {
-        const value = this.value.replace(/\D/g, ''); // Remove non-digits
-        this.value = value.substring(0, 6); // Limit to 6 digits
-        updatePinDots();
-        
-        // Auto-submit when 6 digits entered
-        if (value.length === 6) {
-          setTimeout(verifyPin, 100);
-        }
-      });
-      
-      pinInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && this.value.length === 6) {
-          verifyPin();
-        }
-        
-        // Allow backspace and delete
-        if (e.key === 'Backspace' || e.key === 'Delete') {
-          setTimeout(updatePinDots, 0);
-        }
-      });
-      
-      submitPinBtn.addEventListener('click', verifyPin);
-      
-      // Prevent paste to avoid cheating
-      pinInput.addEventListener('paste', function(e) {
-        e.preventDefault();
-        showFeedback('Paste is disabled for security', 'error');
-      });
-    }
-    
-    function updatePinDots() {
-      const dots = pinDots.querySelectorAll('.pin-dot');
-      const value = pinInput.value;
-      
-      dots.forEach((dot, index) => {
-        if (index < value.length) {
-          dot.classList.add('filled');
-        } else {
-          dot.classList.remove('filled');
-        }
-      });
-    }
-    
-    function verifyPin() {
-      if (authState.isLocked) return;
-      
-      const pin = pinInput.value;
-      if (pin.length !== 6) {
-        showFeedback('Please enter 6-digit PIN', 'error');
-        shakeInput();
         return;
       }
       
-      // Check rate limiting (30 seconds between attempts after 1st wrong)
-      if (authState.attempts > 0 && authState.lastAttemptTime) {
-        const now = new Date();
-        const timeSinceLastAttempt = now - authState.lastAttemptTime;
-        const minWaitTime = 30 * 1000; // 30 seconds
-        
-        if (timeSinceLastAttempt < minWaitTime) {
-          const waitSeconds = Math.ceil((minWaitTime - timeSinceLastAttempt) / 1000);
-          showFeedback(`Please wait ${waitSeconds} seconds before trying again`, 'warning');
-          return;
-        }
+      const minutes = Math.floor(remaining / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      
+      countdownTimer.textContent = 
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      
+      setTimeout(updateTimer, 1000);
+    };
+    
+    updateTimer();
+  }
+  
+  function resetPinInput() {
+    pinInput.value = '';
+    updatePinDots();
+    pinInput.focus();
+  }
+  
+  function shakeInput() {
+    pinInput.classList.add('shake');
+    setTimeout(() => {
+      pinInput.classList.remove('shake');
+    }, 500);
+  }
+  
+  function showFeedback(message, type = 'info') {
+    pinFeedback.textContent = message;
+    pinFeedback.className = `pin-feedback ${type}`;
+    
+    // Auto-clear feedback after 3 seconds
+    setTimeout(() => {
+      if (pinFeedback.textContent === message) {
+        pinFeedback.textContent = '';
+        pinFeedback.className = 'pin-feedback';
       }
-      
-      // Show loading state
-      submitText.textContent = 'Verifying...';
-      pinSpinner.style.display = 'block';
-      submitPinBtn.disabled = true;
-      
-      // Simulate network delay for better UX
-      setTimeout(() => {
-        processPinVerification(pin);
-      }, 800);
+    }, 3000);
+  }
+  
+  function updateAttemptsCounter() {
+    if (authState.attempts > 0) {
+      const remaining = authState.maxAttempts - authState.attempts;
+      remainingAttempts.textContent = remaining;
+      attemptsCounter.style.display = 'inline-flex';
+    } else {
+      attemptsCounter.style.display = 'none';
     }
+  }
+  
+  function logout() {
+    // Clear all authentication data
+    sessionStorage.removeItem('user_role');
+    sessionStorage.removeItem('pin_verified');
+    localStorage.removeItem('auth_state');
     
-    function processPinVerification(pin) {
-      let role = null;
-      
-      // Check PINs (in production, these come from Vercel env vars)
-      if (pin === ADMIN_PIN) {
-        role = 'admin';
-      } else if (pin === VIEWER_PIN) {
-        role = 'viewer';
-      }
-      
-      if (role) {
-        // Successful authentication
-        authState.attempts = 0;
-        authState.lastAttemptTime = new Date();
-        saveAuthState();
-        
-        showFeedback(`Access granted as ${role === 'admin' ? 'Administrator' : 'Viewer'}`, 'success');
-        setTimeout(() => {
-          grantAccess(role);
-        }, 1000);
-      } else {
-        // Failed authentication
-        authState.attempts++;
-        authState.lastAttemptTime = new Date();
-        
-        if (authState.attempts >= authState.maxAttempts) {
-          // Lock user out
-          authState.isLocked = true;
-          authState.lockUntil = new Date(Date.now() + authState.lockDuration);
-          saveAuthState();
-          
-          showLockScreen();
-          startCountdown();
-          showFeedback('Too many incorrect attempts. Account locked for 10 minutes.', 'error');
-        } else {
-          const remaining = authState.maxAttempts - authState.attempts;
-          showFeedback(`Incorrect PIN. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`, 'error');
-          shakeInput();
-          updateAttemptsCounter();
-          saveAuthState();
-        }
-        
-        // Reset UI
-        resetPinInput();
-      }
-      
-      // Reset button state
-      submitText.textContent = 'Access Dashboard';
-      pinSpinner.style.display = 'none';
-      submitPinBtn.disabled = false;
-    }
+    // Reset auth state
+    resetAuthState();
     
-    function grantAccess(role) {
-      // Store authentication state
-      sessionStorage.setItem('user_role', role);
-      sessionStorage.setItem('pin_verified', 'true');
-      authState.currentRole = role;
-      
-      // Update UI based on role
-      updateUIForRole(role);
-      
-      // Hide PIN screen, show landing page
-      pinAuth.style.display = 'none';
-      document.getElementById('landing').style.display = 'flex';
-      
-      // Show role badge
-      showRoleBadge(role);
-    }
+    // Show PIN screen
+    pinAuth.style.display = 'flex';
+    document.getElementById('landing').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'none';
     
-    function updateUIForRole(role) {
-      // This will be used later to disable features for viewers
-      console.log(`User logged in as: ${role}`);
-      
-      if (role === 'viewer') {
-        // Disable sensitive operations for viewers
-        document.getElementById('refreshDataBtn').style.display = 'none';
-        document.getElementById('forceCleanupBtn').style.display = 'none';
-        
-        // Note: We'll also disable note buttons in the main code
-      }
-    }
+    // Reset UI
+    showPinEntry();
+    resetPinInput();
+    authState.currentRole = null;
     
-    function showRoleBadge(role) {
-      if (role === 'admin') {
-        userRoleBadge.innerHTML = `
-          <div class="role-badge admin">
-            <i class="fas fa-user-shield"></i> Administrator Mode
-          </div>
-        `;
-      } else if (role === 'viewer') {
-        userRoleBadge.innerHTML = `
-          <div class="role-badge viewer">
-            <i class="fas fa-eye"></i> View-Only Mode
-          </div>
-        `;
-      }
-      userRoleBadge.style.display = 'block';
-    }
-    
-    function showLockScreen() {
-      pinEntry.style.display = 'none';
-      lockScreen.style.display = 'block';
-      pinInput.disabled = true;
-      submitPinBtn.disabled = true;
-    }
-    
-    function showPinEntry() {
-      pinEntry.style.display = 'block';
-      lockScreen.style.display = 'none';
-      pinInput.disabled = false;
-      submitPinBtn.disabled = false;
-      resetPinInput();
-      updateAttemptsCounter();
-    }
-    
-    function startCountdown() {
-      const updateTimer = () => {
-        if (!authState.isLocked || !authState.lockUntil) {
-          countdownTimer.textContent = '00:00';
-          return;
-        }
-        
-        const now = new Date();
-        const remaining = authState.lockUntil - now;
-        
-        if (remaining <= 0) {
-          // Lock expired
-          authState.isLocked = false;
-          authState.attempts = 0;
-          authState.lockUntil = null;
-          saveAuthState();
-          showPinEntry();
-          return;
-        }
-        
-        const minutes = Math.floor(remaining / 60000);
-        const seconds = Math.floor((remaining % 60000) / 1000);
-        
-        countdownTimer.textContent = 
-          `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        
-        setTimeout(updateTimer, 1000);
-      };
-      
-      updateTimer();
-    }
-    
-    function resetPinInput() {
-      pinInput.value = '';
-      updatePinDots();
-      pinInput.focus();
-    }
-    
-    function shakeInput() {
-      pinInput.classList.add('shake');
-      setTimeout(() => {
-        pinInput.classList.remove('shake');
-      }, 500);
-    }
-    
-    function showFeedback(message, type = 'info') {
-      pinFeedback.textContent = message;
-      pinFeedback.className = `pin-feedback ${type}`;
-      
-      // Auto-clear feedback after 3 seconds
-      setTimeout(() => {
-        if (pinFeedback.textContent === message) {
-          pinFeedback.textContent = '';
-          pinFeedback.className = 'pin-feedback';
-        }
-      }, 3000);
-    }
-    
-    function updateAttemptsCounter() {
-      if (authState.attempts > 0) {
-        const remaining = authState.maxAttempts - authState.attempts;
-        remainingAttempts.textContent = remaining;
-        attemptsCounter.style.display = 'inline-flex';
-      } else {
-        attemptsCounter.style.display = 'none';
-      }
-    }
-    
-    function logout() {
-      // Clear all authentication data
-      sessionStorage.removeItem('user_role');
-      sessionStorage.removeItem('pin_verified');
-      localStorage.removeItem('auth_state');
-      
-      // Reset auth state
-      resetAuthState();
-      
-      // Show PIN screen
-      pinAuth.style.display = 'flex';
-      document.getElementById('landing').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'none';
-      
-      // Reset UI
-      showPinEntry();
-      resetPinInput();
-      authState.currentRole = null;
-      
-      // Hide role badge
-      userRoleBadge.style.display = 'none';
-    }
+    // Hide role badge
+    userRoleBadge.style.display = 'none';
+  }
     
     // =============================================
     // SUPABASE CONFIGURATION
