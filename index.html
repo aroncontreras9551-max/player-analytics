@@ -62,16 +62,21 @@
     }
 
     /* ==================== */
-    /* NEW: PIN SCREEN STYLES */
+    /* NEW: PIN SCREEN STYLES - FIXED WITH position: fixed */
     /* ==================== */
     #pinScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
       padding: 2rem;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      z-index: 9999;
     }
 
     .pin-container {
@@ -268,7 +273,7 @@
 
     /* Landing Page */
     #landing {
-      display: flex;
+      display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -302,6 +307,35 @@
       font-size: 1.1rem;
       margin-bottom: 2rem;
       font-weight: 400;
+    }
+
+    /* Landing page logout button specific styles */
+    #logoutBtnLanding {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+      border: 2px solid var(--danger);
+      transition: all 0.3s ease;
+      width: auto !important;
+      padding: 0.75rem 1.5rem !important;
+      margin-top: 1rem;
+    }
+
+    #logoutBtnLanding:hover:not(:disabled) {
+      background: var(--danger);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    #logoutBtnLanding:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    #logoutBtnLanding:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      pointer-events: none;
     }
 
     .search-section {
@@ -1552,7 +1586,7 @@
 
 <body>
   <!-- ==================== -->
-  <!-- NEW: PIN SCREEN -->
+  <!-- NEW: PIN SCREEN - FIXED WITH position: fixed -->
   <!-- ==================== -->
   <div id="pinScreen">
     <div class="pin-container">
@@ -1607,7 +1641,16 @@
           <i class="fas fa-search"></i> Search for a Page
         </div>
         <div class="search-container">
-          <input type="text" id="pageSelectSearch" class="search-input" placeholder="Search for a page...">
+          <input 
+            type="text" 
+            id="pageSelectSearch" 
+            class="search-input" 
+            placeholder="Search for a page..."
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+          >
           <i class="fas fa-search search-icon"></i>
           <div id="pageSuggestions"></div>
         </div>
@@ -1619,7 +1662,16 @@
           <i class="fas fa-user"></i> Search for a Player (All Pages)
         </div>
         <div class="search-container">
-          <input type="text" id="playerSearchInput" class="search-input" placeholder="Search for a player across all pages...">
+          <input 
+            type="text" 
+            id="playerSearchInput" 
+            class="search-input" 
+            placeholder="Search for a player across all pages..."
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+          >
           <i class="fas fa-search search-icon"></i>
           <div id="playerSuggestions"></div>
         </div>
@@ -1628,6 +1680,16 @@
       <button id="findBtn" class="btn btn-primary" onclick="findData()">
         <i class="fas fa-arrow-right"></i> Access Dashboard
       </button>
+      
+      <!-- NEW: Logout Button on Landing Page -->
+      <div id="landingLogoutSection" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); text-align: center; display: none;">
+        <button id="logoutBtnLanding" class="btn btn-secondary" style="width: auto; padding: 0.75rem 1.5rem;" disabled>
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+        <div style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+          <i class="fas fa-user-shield"></i> Secure Session Active
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1645,6 +1707,9 @@
           </button>
           <button id="forceCleanupBtn" class="btn btn-warning" onclick="showCleanupModal()">
             <i class="fas fa-broom"></i> Force Cleanup
+          </button>
+          <button id="logoutBtnDashboard" class="btn btn-secondary" style="display: none;" disabled>
+            <i class="fas fa-sign-out-alt"></i> Logout
           </button>
         </div>
       </div>
@@ -1677,7 +1742,16 @@
         <div class="player-history">
           <h3>Player History Search - Current Page Only</h3>
           <div style="display: flex; gap: 1rem; margin: 1.5rem 0;">
-            <input type="text" id="playerSearch" class="search-input" placeholder="Enter player name for current page...">
+            <input 
+              type="text" 
+              id="playerSearch" 
+              class="search-input" 
+              placeholder="Enter player name for current page..."
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+            >
             <button class="btn btn-primary" onclick="findPlayerForCurrentPage()">
               <i class="fas fa-search"></i> Search
             </button>
@@ -1802,6 +1876,9 @@
     const pinLockout = document.getElementById('pinLockout');
     const lockoutTimer = document.getElementById('lockoutTimer');
     
+    // Store original button states for UI reset
+    let originalButtonStates = {};
+    
     // Simple hash function (for demo - in production use proper hashing)
     function simpleHash(str) {
       let hash = 0;
@@ -1837,12 +1914,48 @@
       pinSubmit.addEventListener('click', verifyPin);
       pinInput.addEventListener('input', clearPinError);
       
+      // Store original button states for UI reset
+      storeOriginalButtonStates();
+      
       // Auto-focus on PIN input
       setTimeout(() => {
         if (pinInput && !pinInput.disabled) {
           pinInput.focus();
         }
       }, 100);
+    }
+    
+    // Store original button states for UI reset
+    function storeOriginalButtonStates() {
+      const adminButtons = document.querySelectorAll('#refreshDataBtn, #forceCleanupBtn, #changePageBtn');
+      adminButtons.forEach(btn => {
+        const id = btn.id;
+        originalButtonStates[id] = {
+          className: btn.className,
+          innerHTML: btn.innerHTML,
+          disabled: btn.disabled
+        };
+      });
+    }
+    
+    // Reset UI to default state before applying role-based styling
+    function resetUI() {
+      // Reset control buttons to original state
+      Object.keys(originalButtonStates).forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn && originalButtonStates[id]) {
+          const original = originalButtonStates[id];
+          btn.className = original.className;
+          btn.innerHTML = original.innerHTML;
+          btn.disabled = original.disabled;
+        }
+      });
+      
+      // Reset page title
+      const pageTitle = document.getElementById('pageTitle');
+      if (pageTitle && pageTitle.textContent.includes('View Only')) {
+        pageTitle.textContent = pageTitle.textContent.replace(' <span style="font-size: 0.8rem; background: var(--info); color: white; padding: 0.2rem 0.5rem; border-radius: 12px;">View Only</span>', '');
+      }
     }
     
     // Load security state from localStorage
@@ -1855,7 +1968,7 @@
           failedAttempts = parseInt(savedAttempts, 10);
         }
         
-                if (savedLockout) {
+        if (savedLockout) {
           lockoutUntil = new Date(savedLockout);
           if (lockoutUntil < new Date()) {
             // Lockout has expired
@@ -1906,7 +2019,7 @@
       updateAttemptsDisplay();
     }
     
-        // Check lockout status - FIXED to prevent recursion
+    // Check lockout status - FIXED to prevent recursion
     function checkLockoutStatus() {
       if (!lockoutUntil) return false;
       
@@ -2090,7 +2203,7 @@
           failedAttempts++;
           saveSecurityState();
           
-                    if (failedAttempts >= PIN_CONFIG.MAX_ATTEMPTS) {
+          if (failedAttempts >= PIN_CONFIG.MAX_ATTEMPTS) {
             // Lock user out
             lockoutUntil = new Date(Date.now() + (PIN_CONFIG.LOCKOUT_MINUTES * 60 * 1000));
             saveSecurityState();
@@ -2121,6 +2234,20 @@
       }, 800); // Simulated delay
     }
     
+    // Setup logout button
+    function setupLogoutButton() {
+      const logoutBtnLanding = document.getElementById('logoutBtnLanding');
+      const logoutBtnDashboard = document.getElementById('logoutBtnDashboard');
+      
+      if (logoutBtnLanding) {
+        logoutBtnLanding.onclick = logout;
+      }
+      
+      if (logoutBtnDashboard) {
+        logoutBtnDashboard.onclick = logout;
+      }
+    }
+    
     // Show application (your existing code)
     function showApplication() {
       pinScreen.style.display = 'none';
@@ -2143,10 +2270,16 @@
       
       // Apply role-based permissions
       applyRolePermissions();
+      
+      // Setup logout button
+      setupLogoutButton();
     }
     
     // Apply role-based permissions
     function applyRolePermissions() {
+      // Reset UI first to remove any previous role styling
+      resetUI();
+      
       if (userRole === PIN_CONFIG.ROLES.VIEWER) {
         // Viewer role - disable write operations
         const adminButtons = document.querySelectorAll('#refreshDataBtn, #forceCleanupBtn, #changePageBtn');
@@ -2184,42 +2317,40 @@
       }
     }
     
-    // Logout function (optional)
+    // Logout function (FIXED FOR BOTH LOCATIONS)
     function logout() {
+      // Clear all session data
       sessionStorage.removeItem('pinAuthenticated');
       sessionStorage.removeItem('userRole');
       sessionStorage.removeItem('loginTime');
       sessionStorage.removeItem('currentPage');
       sessionStorage.removeItem('currentView');
+      sessionStorage.removeItem('searchPlayerName');
+      sessionStorage.removeItem('searchPlayerPage');
+      sessionStorage.removeItem('searchPlayerPages');
+      sessionStorage.removeItem('currentSearchedPlayer');
       
+      // Reset user role
       userRole = PIN_CONFIG.ROLES.NONE;
       
-      // Hide application, show PIN screen
+      // Show PIN screen, hide everything else
+      pinScreen.style.display = 'flex';
       document.getElementById('landing').style.display = 'none';
       document.getElementById('dashboard').style.display = 'none';
-      pinScreen.style.display = 'flex';
       
       // Reset PIN input
       pinInput.value = '';
       pinInput.focus();
       clearPinError();
       
+      // Reset UI to default state
+      resetUI();
+      
       // Check lockout status
       checkLockoutStatus();
-    }
-    
-    // Add logout button to header (optional)
-    function addLogoutButton() {
-      const headerContent = document.querySelector('.header-content');
-      if (headerContent && !document.getElementById('logoutBtn')) {
-        const logoutBtn = document.createElement('button');
-        logoutBtn.id = 'logoutBtn';
-        logoutBtn.className = 'btn btn-secondary';
-        logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
-        logoutBtn.onclick = logout;
-        
-        headerContent.appendChild(logoutBtn);
-      }
+      
+      // Show logout notification
+      showNotification('Successfully logged out', 'success');
     }
     
     // =============================================
@@ -2447,7 +2578,7 @@
         return pktDate;
     }
 
-    // Calculate time since last deposit in PKT
+    // Calculate time since last deposit in PKT - EXACT HOURS/DAYS
     function formatTimeSince(utcDateString) {
         if (!utcDateString) return 'N/A';
         
@@ -2468,18 +2599,22 @@
             
             const hoursSince = Math.floor(diffMs / (1000 * 60 * 60));
             const minutesSince = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-            const daysSince = hoursSince / 24;
+            const daysSince = Math.floor(hoursSince / 24);
             const remainingHours = hoursSince % 24;
+            const remainingMinutes = minutesSince % 60;
             
-            if (daysSince < 1) {
+            if (daysSince === 0) {
                 if (hoursSince === 0) {
                     return `${minutesSince} minutes ago`;
                 } else {
                     return `${hoursSince} hours ${minutesSince} minutes ago`;
                 }
             } else {
-                const fullDays = Math.floor(daysSince);
-                return `${fullDays} day${fullDays > 1 ? 's' : ''} ${remainingHours} hours ago`;
+                if (remainingHours === 0) {
+                    return `${daysSince} day${daysSince > 1 ? 's' : ''} ago`;
+                } else {
+                    return `${daysSince} day${daysSince > 1 ? 's' : ''} ${remainingHours} hour${remainingHours > 1 ? 's' : ''} ago`;
+                }
             }
         } catch (error) {
             console.error('Error calculating time since:', error, utcDateString);
@@ -2487,6 +2622,59 @@
         }
     }
 
+    // FIXED VERSION: Calculate exact gap duration between two dates IN PKT TIME
+function calculateExactGapDuration(startDate, endDate) {
+    if (!startDate || !endDate) return '—';
+    
+    try {
+        // Both dates should already be in PKT
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            return '—';
+        }
+        
+        // Calculate EXACT difference in milliseconds IN PKT
+        const diffMs = end.getTime() - start.getTime();
+        
+        if (diffMs <= 0) return '—';
+        
+        // Convert to hours, minutes
+        const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const totalMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        const days = Math.floor(totalHours / 24);
+        const hours = totalHours % 24;
+        
+        // For active deposit days (same day), return dash
+        if (days === 0 && hours === 0 && totalMinutes === 0) {
+            return '—';
+        }
+        
+        // Build the gap string
+        let gapString = '';
+        
+        if (days > 0) {
+            gapString += `${days} day${days > 1 ? 's' : ''}`;
+        }
+        
+        if (hours > 0) {
+            if (gapString) gapString += ' ';
+            gapString += `${hours} hour${hours > 1 ? 's' : ''}`;
+        }
+        
+        // Only show minutes if there are no days and hours < 2
+        if (totalMinutes > 0 && days === 0 && hours < 2) {
+            if (gapString) gapString += ' ';
+            gapString += `${totalMinutes} minute${totalMinutes > 1 ? 's' : ''}`;
+        }
+        
+        return gapString || '—';
+    } catch (error) {
+        console.error('Error calculating gap duration:', error);
+        return '—';
+    }
+}
     // =============================================
     // STATE MANAGEMENT
     // =============================================
@@ -2536,6 +2724,7 @@
     const refreshBtn = document.getElementById('refreshDataBtn');
     const forceCleanupBtn = document.getElementById('forceCleanupBtn');
     const changePageBtn = document.getElementById('changePageBtn');
+    const logoutBtnDashboard = document.getElementById('logoutBtnDashboard');
     const loadingProgress = document.getElementById('loadingProgress');
     const refreshModal = document.getElementById('refreshModal');
     const cleanupModal = document.getElementById('cleanupModal');
@@ -2550,6 +2739,8 @@
     const statsRow2 = document.getElementById('statsRow2');
     const statsRow3 = document.getElementById('statsRow3');
     const pageDepositsView = document.getElementById('pageDepositsView');
+    const landingLogoutSection = document.getElementById('landingLogoutSection');
+    const logoutBtnLanding = document.getElementById('logoutBtnLanding');
 
     // =============================================
     // UTILITY FUNCTIONS
@@ -3228,220 +3419,292 @@
     }
 
     async function getEnhancedPlayerHistory(playerName, pageName) {
-      try {
-        console.log(`Getting enhanced history for player: ${playerName} on page: ${pageName}`);
-        
-        // FIXED: Use pagination helper to get ALL deposits for this player
-        const allDeposits = await fetchAllRows('deposits', { 
-          player_name: playerName, 
-          page_name: pageName 
-        }, { field: 'deposit_date', ascending: true });
-        
-        console.log(`Total deposits found for ${playerName}: ${allDeposits.length}`);
-        
-        if (!allDeposits || allDeposits.length === 0) {
-          return { 
-            enhancedHistory: [], 
-            activityNotes: ["No data found for this player."],
-            currentStatus: "Inactive",
-            message: "No data found for this player",
-            rawDeposits: 0,
-            timeSinceDisplay: "N/A"
-          };
-        }
+  try {
+    console.log(`Getting enhanced history for player: ${playerName} on page: ${pageName}`);
+    
+    const allDeposits = await fetchAllRows('deposits', { 
+      player_name: playerName, 
+      page_name: pageName 
+    }, { field: 'deposit_date', ascending: true });
+    
+    console.log(`Total deposits found for ${playerName}: ${allDeposits.length}`);
+    
+    if (!allDeposits || allDeposits.length === 0) {
+      return { 
+        enhancedHistory: [], 
+        currentStatus: "Inactive",
+        message: "No data found for this player",
+        rawDeposits: 0,
+        timeSinceDisplay: "N/A"
+      };
+    }
 
-        const playerDeposits = allDeposits.map(deposit => {
-          const utcDate = new Date(deposit.deposit_date);
-          const pktDate = new Date(utcDate.getTime() + (5 * 60 * 60 * 1000));
-          const displayDate = convertUTCToPKT(deposit.deposit_date);
-          const displayDateOnly = convertUTCToPKTDateOnly(deposit.deposit_date);
-          
-          return {
-            utcDate: utcDate,
-            pktDate: pktDate,
-            timestamp: displayDate,
-            displayDateOnly: displayDateOnly,
-            amount: parseFloat(deposit.amount) || 0,
-            originalDate: deposit.deposit_date
-          };
-        }).filter(deposit => !isNaN(deposit.utcDate.getTime()));
+    // Convert ALL deposits to PKT with exact timestamps
+    const playerDeposits = allDeposits.map(deposit => {
+      const utcDate = new Date(deposit.deposit_date);
+      const pktDate = new Date(utcDate.getTime() + (5 * 60 * 60 * 1000));
+      
+      return {
+        utcDate: utcDate,
+        pktDate: pktDate,
+        displayDate: convertUTCToPKT(deposit.deposit_date),
+        displayDateOnly: convertUTCToPKTDateOnly(deposit.deposit_date),
+        amount: parseFloat(deposit.amount) || 0,
+        originalDate: deposit.deposit_date,
+        exactTimePKT: pktDate.getTime() // Exact timestamp in PKT
+      };
+    }).filter(deposit => !isNaN(deposit.utcDate.getTime()));
 
-        playerDeposits.sort((a, b) => a.pktDate - b.pktDate);
-        
-        const nowPKT = getCurrentPKT();
-        const mostRecentDeposit = playerDeposits[playerDeposits.length - 1];
-        
-        const timeSinceMs = nowPKT - mostRecentDeposit.pktDate;
-        const hoursSince = Math.floor(timeSinceMs / (1000 * 60 * 60));
-        const minutesSince = Math.floor((timeSinceMs % (1000 * 60 * 60)) / (1000 * 60));
-        const daysSince = hoursSince / 24;
-        const remainingHours = hoursSince % 24;
-        
-        // FIXED: Use the correct status calculation
-        const currentStatus = calculatePlayerStatus(daysSince);
+    playerDeposits.sort((a, b) => a.pktDate - b.pktDate);
+    
+    const nowPKT = getCurrentPKT();
+    const mostRecentDeposit = playerDeposits[playerDeposits.length - 1];
+    
+    // Calculate time since last deposit (for display)
+    const timeSinceMs = nowPKT - mostRecentDeposit.pktDate;
+    const hoursSince = Math.floor(timeSinceMs / (1000 * 60 * 60));
+    const minutesSince = Math.floor((timeSinceMs % (1000 * 60 * 60)) / (1000 * 60));
+    const daysSince = hoursSince / 24;
+    const remainingHours = hoursSince % 24;
+    
+    const currentStatus = calculatePlayerStatus(daysSince);
 
-        let timeSinceDisplay = '';
-        if (daysSince < 1) {
-          if (hoursSince === 0) {
-            timeSinceDisplay = `${minutesSince} minutes ago`;
-          } else {
-            timeSinceDisplay = `${hoursSince} hours ${minutesSince} minutes ago`;
-          }
-        } else {
-          const fullDays = Math.floor(daysSince);
-          timeSinceDisplay = `${fullDays} day${fullDays > 1 ? 's' : ''} ${remainingHours} hours ago`;
-        }
-
-        const depositsByDay = {};
-        playerDeposits.forEach(deposit => {
-          const dateKey = deposit.displayDateOnly;
-          
-          if (!depositsByDay[dateKey]) {
-            depositsByDay[dateKey] = {
-              count: 0,
-              totalAmount: 0,
-              displayDate: dateKey,
-              deposits: [],
-              pktDate: deposit.pktDate
-            };
-          }
-          depositsByDay[dateKey].count++;
-          depositsByDay[dateKey].totalAmount += deposit.amount;
-          depositsByDay[dateKey].deposits.push(deposit);
-        });
-
-        const enhancedHistory = [];
-        const depositDates = Object.keys(depositsByDay).sort((a, b) => {
-          return new Date(depositsByDay[a].pktDate) - new Date(depositsByDay[b].pktDate);
-        });
-        
-        if (depositDates.length === 0) {
-          return {
-            enhancedHistory: [],
-            currentStatus: "Inactive",
-            message: "No deposit data available",
-            rawDeposits: 0,
-            timeSinceDisplay: "N/A"
-          };
-        }
-
-        const firstDepositDate = new Date(playerDeposits[0].pktDate);
-        const lastDepositDate = new Date(playerDeposits[playerDeposits.length - 1].pktDate);
-        
-        let currentDate = new Date(firstDepositDate);
-        currentDate.setUTCHours(0, 0, 0, 0);
-        
-        const todayPKT = getStartOfDayPKT(nowPKT);
-        
-        const timeline = [];
-        
-        while (currentDate <= todayPKT) {
-          const dateKey = convertUTCToPKTDateOnly(currentDate.toISOString());
-          const dayData = depositsByDay[dateKey];
-          
-          timeline.push({
-            date: new Date(currentDate),
-            dateKey: dateKey,
-            isDepositDay: !!dayData,
-            depositCount: dayData ? dayData.count : 0,
-            totalAmount: dayData ? dayData.totalAmount : 0,
-            displayDate: dateKey,
-            deposits: dayData ? dayData.deposits : [],
-            pktDate: currentDate.getTime()
-          });
-          
-          currentDate.setDate(currentDate.getDate() + 1);
-          currentDate.setUTCHours(0, 0, 0, 0);
-        }
-
-        let i = 0;
-        while (i < timeline.length) {
-          const currentDay = timeline[i];
-          
-          if (currentDay.isDepositDay) {
-            const depositText = currentDay.depositCount === 1 
-              ? "1 deposit" 
-              : `${currentDay.depositCount} deposits`;
-            
-            const amountText = currentDay.totalAmount > 0 
-              ? ` ($${currentDay.totalAmount.toFixed(2)})` 
-              : "";
-            
-            enhancedHistory.push({
-              dateRange: currentDay.displayDate,
-              activity: `${depositText}${amountText}`,
-              status: "Active",
-              inactiveGap: 0,
-              activityLevel: currentDay.depositCount > 1 ? "Multiple" : "Single",
-              depositCount: currentDay.depositCount,
-              totalAmount: currentDay.totalAmount,
-              isDepositDay: true,
-              timestamp: currentDay.pktDate
-            });
-            i++;
-          } else {
-            let inactiveStart = i;
-            let inactiveCount = 0;
-            
-            while (i < timeline.length && !timeline[i].isDepositDay) {
-              inactiveCount++;
-              i++;
-            }
-            
-            if (inactiveCount === 1) {
-              enhancedHistory.push({
-                dateRange: timeline[inactiveStart].displayDate,
-                activity: "No deposits",
-                status: "Inactive",
-                inactiveGap: inactiveCount,
-                activityLevel: "None",
-                depositCount: 0,
-                totalAmount: 0,
-                isDepositDay: false,
-                timestamp: timeline[inactiveStart].pktDate
-              });
-            } else {
-              const startDate = timeline[inactiveStart].displayDate;
-              const endDate = timeline[i - 1].displayDate;
-              enhancedHistory.push({
-                dateRange: `${startDate} - ${endDate}`,
-                activity: "No deposits",
-                status: "Inactive",
-                inactiveGap: inactiveCount,
-                activityLevel: "None",
-                depositCount: 0,
-                totalAmount: 0,
-                isDepositDay: false,
-                timestamp: timeline[inactiveStart].pktDate
-              });
-            }
-          }
-        }
-
-        const totalDepositDays = Object.keys(depositsByDay).length;
-        const totalDepositCount = playerDeposits.length;
-        const totalAmount = playerDeposits.reduce((sum, deposit) => sum + deposit.amount, 0);
-
-        return {
-          enhancedHistory: enhancedHistory,
-          currentStatus: currentStatus,
-          rawDeposits: totalDepositCount,
-          totalDepositDays: totalDepositDays,
-          totalAmount: totalAmount,
-          timeSinceDisplay: timeSinceDisplay,
-          message: `Found ${totalDepositCount} deposit(s) across ${totalDepositDays} day(s) from ${depositDates[0]} to ${depositDates[depositDates.length - 1]}`
-        };
-      } catch (error) {
-        console.error('Error getting enhanced player history:', error);
-        return { 
-          enhancedHistory: [], 
-          currentStatus: "Inactive",
-          message: "Error loading player history",
-          rawDeposits: 0,
-          timeSinceDisplay: "N/A"
-        };
+    let timeSinceDisplay = '';
+    if (daysSince < 1) {
+      if (hoursSince === 0) {
+        timeSinceDisplay = `${minutesSince} minutes ago`;
+      } else {
+        timeSinceDisplay = `${hoursSince} hours ${minutesSince} minutes ago`;
+      }
+    } else {
+      const fullDays = Math.floor(daysSince);
+      if (remainingHours === 0) {
+        timeSinceDisplay = `${fullDays} day${fullDays > 1 ? 's' : ''} ago`;
+      } else {
+        timeSinceDisplay = `${fullDays} day${fullDays > 1 ? 's' : ''} ${remainingHours} hour${remainingHours > 1 ? 's' : ''} ago`;
       }
     }
+
+    // Group deposits by day, but keep track of LATEST deposit time each day
+    const depositsByDay = {};
+    playerDeposits.forEach(deposit => {
+      const dateKey = deposit.displayDateOnly;
+      
+      if (!depositsByDay[dateKey]) {
+        depositsByDay[dateKey] = {
+          count: 0,
+          totalAmount: 0,
+          displayDate: dateKey,
+          deposits: [],
+          pktDate: deposit.pktDate,
+          latestDepositTime: deposit.pktDate, // Track latest deposit time of the day
+          exactTimePKT: deposit.exactTimePKT
+        };
+      }
+      depositsByDay[dateKey].count++;
+      depositsByDay[dateKey].totalAmount += deposit.amount;
+      depositsByDay[dateKey].deposits.push(deposit);
+      
+      // Update latest deposit time if this deposit is later
+      if (deposit.pktDate > depositsByDay[dateKey].latestDepositTime) {
+        depositsByDay[dateKey].latestDepositTime = deposit.pktDate;
+        depositsByDay[dateKey].exactTimePKT = deposit.exactTimePKT;
+      }
+    });
+
+    const enhancedHistory = [];
+    const depositDates = Object.keys(depositsByDay).sort((a, b) => {
+      return depositsByDay[a].pktDate - depositsByDay[b].pktDate;
+    });
+    
+    if (depositDates.length === 0) {
+      return {
+        enhancedHistory: [],
+        currentStatus: "Inactive",
+        message: "No deposit data available",
+        rawDeposits: 0,
+        timeSinceDisplay: "N/A"
+      };
+    }
+
+    // Build timeline with EXACT deposit times
+    const timeline = [];
+    const firstDepositDate = new Date(depositsByDay[depositDates[0]].pktDate);
+    const lastDepositDate = new Date(depositsByDay[depositDates[depositDates.length - 1]].pktDate);
+    
+    let currentDate = new Date(firstDepositDate);
+    currentDate.setUTCHours(0, 0, 0, 0);
+    
+    const todayPKT = getStartOfDayPKT(nowPKT);
+    
+    // Build day-by-day timeline
+    while (currentDate <= todayPKT) {
+      const dateKey = convertUTCToPKTDateOnly(currentDate.toISOString());
+      const dayData = depositsByDay[dateKey];
+      
+      if (dayData) {
+        // This is a deposit day
+        timeline.push({
+          date: new Date(currentDate),
+          dateKey: dateKey,
+          isDepositDay: true,
+          depositCount: dayData.count,
+          totalAmount: dayData.totalAmount,
+          displayDate: dateKey,
+          deposits: dayData.deposits,
+          pktDate: currentDate.getTime(),
+          latestDepositTime: dayData.latestDepositTime, // EXACT time of last deposit that day
+          exactTimePKT: dayData.exactTimePKT
+        });
+      } else {
+        // This is a non-deposit day
+        timeline.push({
+          date: new Date(currentDate),
+          dateKey: dateKey,
+          isDepositDay: false,
+          depositCount: 0,
+          totalAmount: 0,
+          displayDate: dateKey,
+          deposits: [],
+          pktDate: currentDate.getTime(),
+          latestDepositTime: null,
+          exactTimePKT: null
+        });
+      }
+      
+      currentDate.setDate(currentDate.getDate() + 1);
+      currentDate.setUTCHours(0, 0, 0, 0);
+    }
+
+    // Build enhanced history with EXACT gap calculations
+    let i = 0;
+    while (i < timeline.length) {
+      const currentDay = timeline[i];
+      
+      if (currentDay.isDepositDay) {
+        // Determine activity level
+        let activityLevel = "Normal";
+        if (currentDay.depositCount > 4 || currentDay.totalAmount > 50) {
+          activityLevel = "High";
+        }
+        
+        const depositText = currentDay.depositCount === 1 
+          ? "1 deposit" 
+          : `${currentDay.depositCount} deposits`;
+        
+        const amountText = currentDay.totalAmount > 0 
+          ? ` ($${currentDay.totalAmount.toFixed(2)})` 
+          : "";
+        
+        enhancedHistory.push({
+          dateRange: currentDay.displayDate,
+          activity: `${depositText}${amountText}`,
+          status: "Active",
+          inactiveGap: 0,
+          activityLevel: activityLevel,
+          depositCount: currentDay.depositCount,
+          totalAmount: currentDay.totalAmount,
+          isDepositDay: true,
+          timestamp: currentDay.pktDate,
+          exactDepositTime: currentDay.latestDepositTime, // Store exact time
+          gapDuration: "—"
+        });
+        i++;
+      } else {
+        let inactiveStart = i;
+        let inactiveCount = 0;
+        let startDay = timeline[inactiveStart];
+        
+        // Find previous deposit day for exact time reference
+        let previousDepositTime = null;
+        for (let j = inactiveStart - 1; j >= 0; j--) {
+          if (timeline[j].isDepositDay) {
+            previousDepositTime = timeline[j].latestDepositTime;
+            break;
+          }
+        }
+        
+        // If no previous deposit found (shouldn't happen), use start of day
+        if (!previousDepositTime) {
+          previousDepositTime = new Date(startDay.date);
+          previousDepositTime.setUTCHours(0, 0, 0, 0);
+          previousDepositTime = new Date(previousDepositTime.getTime() + (5 * 60 * 60 * 1000));
+        }
+        
+        while (i < timeline.length && !timeline[i].isDepositDay) {
+          inactiveCount++;
+          i++;
+        }
+        
+        // Calculate gap using EXACT TIMES
+        let endTimePKT;
+        if (i < timeline.length) {
+          // Next deposit day - use its exact deposit time
+          endTimePKT = timeline[i].latestDepositTime;
+        } else {
+          // Current PKT time
+          endTimePKT = nowPKT;
+        }
+        
+        // Calculate exact gap from last deposit to next deposit/now
+        const gapDuration = calculateExactGapDuration(previousDepositTime, endTimePKT);
+        
+        if (inactiveCount === 1) {
+          enhancedHistory.push({
+            dateRange: timeline[inactiveStart].displayDate,
+            activity: "No deposits",
+            status: "Inactive",
+            inactiveGap: inactiveCount,
+            activityLevel: "None",
+            depositCount: 0,
+            totalAmount: 0,
+            isDepositDay: false,
+            timestamp: timeline[inactiveStart].pktDate,
+            gapDuration: gapDuration
+          });
+        } else {
+          const startDateStr = timeline[inactiveStart].displayDate;
+          const endDateStr = timeline[i - 1].displayDate;
+          enhancedHistory.push({
+            dateRange: `${startDateStr} - ${endDateStr}`,
+            activity: "No deposits",
+            status: "Inactive",
+            inactiveGap: inactiveCount,
+            activityLevel: "None",
+            depositCount: 0,
+            totalAmount: 0,
+            isDepositDay: false,
+            timestamp: timeline[inactiveStart].pktDate,
+            gapDuration: gapDuration
+          });
+        }
+      }
+    }
+
+    const totalDepositDays = Object.keys(depositsByDay).length;
+    const totalDepositCount = playerDeposits.length;
+    const totalAmount = playerDeposits.reduce((sum, deposit) => sum + deposit.amount, 0);
+
+    return {
+      enhancedHistory: enhancedHistory,
+      currentStatus: currentStatus,
+      rawDeposits: totalDepositCount,
+      totalDepositDays: totalDepositDays,
+      totalAmount: totalAmount,
+      timeSinceDisplay: timeSinceDisplay,
+      message: `Found ${totalDepositCount} deposit(s) across ${totalDepositDays} day(s) from ${depositDates[0]} to ${depositDates[depositDates.length - 1]}`
+    };
+  } catch (error) {
+    console.error('Error getting enhanced player history:', error);
+    return { 
+      enhancedHistory: [], 
+      currentStatus: "Inactive",
+      message: "Error loading player history",
+      rawDeposits: 0,
+      timeSinceDisplay: "N/A"
+    };
+  }
+}
 
     async function getPageDailyDeposits(pageName, monthOffset = 0) {
       try {
@@ -3737,23 +4000,33 @@
     function initializeApp() {
       // Start with PIN system
       initPinSystem();
+      setupLogoutButton();
     }
 
     function showLandingPage() {
       clearAllSearchInputs();
       clearPlayerHistory();
       
-      sessionStorage.removeItem('searchPlayerName');
-      sessionStorage.removeItem('searchPlayerPage');
-      sessionStorage.removeItem('searchPlayerPages');
+      sessionStorage.removeItem('currentPage');
+      sessionStorage.removeItem('currentView');
       
       navigationContext = 'landing';
       
       document.getElementById('dashboard').style.display = 'none';
       document.getElementById('landing').style.display = 'flex';
+      
+      // Show/hide logout button based on authentication
+      const isAuthenticated = sessionStorage.getItem('pinAuthenticated') === 'true';
+      
+      if (landingLogoutSection) {
+        landingLogoutSection.style.display = isAuthenticated ? 'block' : 'none';
+      }
+      
+      if (logoutBtnLanding) {
+        logoutBtnLanding.disabled = false; // Enable logout button on landing page
+      }
+      
       currentView = 'landing';
-      sessionStorage.removeItem('currentPage');
-      sessionStorage.removeItem('currentView');
     }
 
     function loadDashboard(pageObj) {
@@ -3769,14 +4042,16 @@
       document.getElementById('landing').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
       
+      // Show logout button in dashboard
+      if (logoutBtnDashboard) {
+        logoutBtnDashboard.style.display = 'inline-flex';
+      }
+      
       updatePageTitle();
       
       showLoader();
       disableControlButtons();
       loadDashboardData();
-      
-      // Add logout button if not already present
-      addLogoutButton();
     }
 
     function updatePageTitle() {
@@ -3846,12 +4121,16 @@
       changePageBtn.disabled = true;
       refreshBtn.disabled = true;
       forceCleanupBtn.disabled = true;
+      if (logoutBtnDashboard) logoutBtnDashboard.disabled = true;
+      if (logoutBtnLanding) logoutBtnLanding.disabled = true;
     }
 
     function enableControlButtons() {
       changePageBtn.disabled = false;
       refreshBtn.disabled = false;
       forceCleanupBtn.disabled = false;
+      if (logoutBtnDashboard) logoutBtnDashboard.disabled = false;
+      if (logoutBtnLanding) logoutBtnLanding.disabled = false;
     }
 
     function clearBackContainer() {
@@ -4819,7 +5098,7 @@
             <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);">${data.totalDepositDays || 0}</div>
           </div>
           <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid var(--border-color);">
-            <div style="font-size: 0.875rem; color: var(--text-secondary);">Time Since Last</div>
+            <div style="font-size: 0.875rem; color: var(--text-secondary);">Last Deposit</div>
             <div style="font-size: 1rem; font-weight: 600; color: var(--text-primary);">${data.timeSinceDisplay || 'N/A'}</div>
           </div>
           <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid var(--border-color);">
@@ -4845,7 +5124,7 @@
                   <th style="text-align: left;">Date / Period</th>
                   <th style="text-align: left;">Activity Details</th>
                   <th style="text-align: center;">Status</th>
-                  <th style="text-align: center;">Inactive Gap</th>
+                  <th style="text-align: center;">Gap Duration</th>
                   <th style="text-align: left;">Activity Level</th>
                 </tr>
               </thead>
@@ -4859,11 +5138,11 @@
           '<span class="status-badge status-active">Active</span>' : 
           '<span class="status-badge status-inactive">Inactive</span>';
         
-        let gapDisplay = '-';
+        // FIXED: Active days show dash, inactive days show exact gap
+        const gapDisplay = period.gapDuration;
         let gapClass = '';
         
-        if (period.inactiveGap > 0) {
-          gapDisplay = `${period.inactiveGap} day${period.inactiveGap > 1 ? 's' : ''}`;
+        if (!isActive && period.inactiveGap > 0) {
           if (period.inactiveGap >= 7) gapClass = 'gap-high';
           else if (period.inactiveGap >= 4) gapClass = 'gap-medium';
           else gapClass = 'gap-low';
@@ -4873,6 +5152,18 @@
         if (isActive && period.depositCount > 0) {
           const amountText = period.totalAmount > 0 ? ` - $${period.totalAmount.toFixed(2)}` : '';
           activityDisplay = `${period.depositCount} deposit${period.depositCount > 1 ? 's' : ''}${amountText}`;
+        }
+
+        // Determine activity level display with new logic
+        let activityLevelDisplay = '';
+        if (isActive) {
+          if (period.activityLevel === 'High') {
+            activityLevelDisplay = '<span style="color: var(--success);"><i class="fas fa-bolt"></i> High Activity</span>';
+          } else {
+            activityLevelDisplay = '<span style="color: var(--info);"><i class="fas fa-check"></i> Normal</span>';
+          }
+        } else {
+          activityLevelDisplay = '<span style="color: var(--text-secondary);"><i class="fas fa-moon"></i> No Activity</span>';
         }
 
         html += `
@@ -4887,14 +5178,14 @@
               }
             </td>
             <td style="text-align: center;">${statusBadge}</td>
-            <td class="gap-cell" style="text-align: center;"><span class="${gapClass}">${gapDisplay}</span></td>
-            <td style="text-align: left;">
-              ${period.activityLevel === 'Multiple' ? 
-                '<span style="color: var(--success);"><i class="fas fa-bolt"></i> High Activity</span>' :
-               period.activityLevel === 'Single' ? 
-                '<span style="color: var(--info);"><i class="fas fa-check"></i> Normal</span>' :
-                '<span style="color: var(--text-secondary);"><i class="fas fa-moon"></i> No Activity</span>'
+            <td class="gap-cell" style="text-align: center;">
+              ${isActive ? 
+                '<span>—</span>' : 
+                `<span class="${gapClass}">${gapDisplay}</span>`
               }
+            </td>
+            <td style="text-align: left;">
+              ${activityLevelDisplay}
             </td>
           </tr>
         `;
@@ -4903,6 +5194,15 @@
       html += `
           </tbody>
         </table>
+      </div>
+    </div>
+    
+    <div style="margin-top: 1.5rem; background: var(--bg-secondary); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+      <h5 style="color: var(--text-primary); margin-bottom: 0.5rem;">Activity Level Legend:</h5>
+      <div style="display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.875rem;">
+        <div><span style="color: var(--success);"><i class="fas fa-bolt"></i> High Activity</span>: >4 deposits OR >$50 in one day</div>
+        <div><span style="color: var(--info);"><i class="fas fa-check"></i> Normal Activity</span>: ≤4 deposits AND ≤$50 in one day</div>
+        <div><span style="color: var(--text-secondary);"><i class="fas fa-moon"></i> No Activity</span>: No deposits</div>
       </div>
     </div>
   `;
@@ -5180,12 +5480,16 @@
       changePageBtn.disabled = true;
       refreshBtn.disabled = true;
       forceCleanupBtn.disabled = true;
+      if (logoutBtnDashboard) logoutBtnDashboard.disabled = true;
+      if (logoutBtnLanding) logoutBtnLanding.disabled = true;
     }
 
     function enableAllButtons() {
       changePageBtn.disabled = false;
       refreshBtn.disabled = false;
       forceCleanupBtn.disabled = false;
+      if (logoutBtnDashboard) logoutBtnDashboard.disabled = false;
+      if (logoutBtnLanding) logoutBtnLanding.disabled = false;
     }
 
     // Event listeners
