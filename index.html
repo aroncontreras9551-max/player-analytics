@@ -3442,10 +3442,24 @@ function disableBlockedPlayerActions() {
     // SUPABASE CONFIGURATION
     // =============================================
     const SUPABASE_URL = "https://bwbusaawmalgfhcwdryq.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_7WhMjECm7CGCjX1xNUsMLg_rBRlp_dI";
-    
-    // Initialize Supabase client
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_KEY = "sb_publishable_7WhMjECm7CGCjX1xNUsMLg_rBRlp_dI";
+
+// SAFE Supabase initialization - prevents duplicate declaration
+let supabase;
+try {
+    if (window.supabase && !window.supabaseClient) {
+        // Create with a different name to avoid conflict
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    // Use the client
+    supabase = window.supabaseClient;
+} catch (error) {
+    console.error('Failed to initialize Supabase:', error);
+    // Create a mock supabase object to prevent further errors
+    supabase = {
+        from: () => ({ select: () => ({ eq: () => ({}) }) })
+    };
+}
 
     // =============================================
     // CONSTANTS AND CONFIGURATION
