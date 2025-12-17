@@ -3444,8 +3444,8 @@ function disableBlockedPlayerActions() {
     const SUPABASE_URL = "https://bwbusaawmalgfhcwdryq.supabase.co";
     const SUPABASE_KEY = "sb_publishable_7WhMjECm7CGCjX1xNUsMLg_rBRlp_dI";
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+var supabase = window.supabaseClient || window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+window.supabaseClient = supabase;
 
     // =============================================
     // CONSTANTS AND CONFIGURATION
