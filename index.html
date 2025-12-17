@@ -3442,15 +3442,10 @@ function disableBlockedPlayerActions() {
     // SUPABASE CONFIGURATION
     // =============================================
     const SUPABASE_URL = "https://bwbusaawmalgfhcwdryq.supabase.co";
-const SUPABASE_KEY = "sb_publishable_7WhMjECm7CGCjX1xNUsMLg_rBRlp_dI";
-
-// Initialize Supabase client - ONLY ONCE
-let supabase;
-if (typeof window.supabase !== 'undefined') {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} else {
-    console.error('Supabase library not loaded!');
-}
+    const SUPABASE_KEY = "sb_publishable_7WhMjECm7CGCjX1xNUsMLg_rBRlp_dI";
+    
+    // Initialize Supabase client
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // =============================================
     // CONSTANTS AND CONFIGURATION
