@@ -3444,13 +3444,8 @@ function disableBlockedPlayerActions() {
     const SUPABASE_URL = "https://bwbusaawmalgfhcwdryq.supabase.co";
     const SUPABASE_KEY = "sb_publishable_7WhMjECm7CGCjX1xNUsMLg_rBRlp_dI";
 
-    // Initialize Supabase client ONLY if not already declared
-if (typeof window.supabaseClient === 'undefined') {
-    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-}
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Use window.supabaseClient everywhere in your code
-const supabase = window.supabaseClient;
 
     // =============================================
     // CONSTANTS AND CONFIGURATION
