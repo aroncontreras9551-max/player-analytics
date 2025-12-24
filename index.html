@@ -7,6 +7,96 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- ==================== -->
+  <!-- IP ACCESS CONTROL -->
+  <!-- ==================== -->
+  <script>
+  (async function() {
+    // List of allowed IPs
+    const allowedIPs = [
+      '119.159.172.227',  // Your main IP
+      // Add more IPs here: '203.0.113.45',
+      // '198.51.100.23'
+    ];
+
+    // Function to get user's IP
+    async function getUserIP() {
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip;
+      } catch (error) {
+        console.error('Error getting IP:', error);
+        return null;
+      }
+    }
+
+    // Check IP and block if not allowed
+    const userIP = await getUserIP();
+    console.log('User IP:', userIP);
+    
+    if (!userIP) {
+      // If can't get IP, still allow but log it
+      console.warn('Could not verify IP - allowing access');
+      return;
+    }
+    
+    // Check if IP is allowed
+    if (!allowedIPs.includes(userIP)) {
+      // Block access
+      document.body.innerHTML = `
+        <div style="
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          font-family: 'Inter', sans-serif;
+          color: white;
+          text-align: center;
+          padding: 2rem;
+        ">
+          <div style="
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 20px;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+          ">
+            <div style="font-size: 4rem; margin-bottom: 1.5rem;">🔒</div>
+            <h1 style="margin-bottom: 1rem; font-size: 2rem;">Access Denied</h1>
+            <p style="margin-bottom: 1.5rem; opacity: 0.9;">
+              This analytics dashboard is only accessible from authorized locations.
+            </p>
+            <div style="
+              background: rgba(0, 0, 0, 0.2);
+              padding: 1rem;
+              border-radius: 10px;
+              margin-bottom: 1.5rem;
+              font-family: monospace;
+              font-size: 1.1rem;
+            ">
+              Your IP: ${userIP}
+            </div>
+            <p style="font-size: 0.9rem; opacity: 0.7;">
+              If you need access, please contact the administrator.
+            </p>
+          </div>
+        </div>
+      `;
+      
+      // Remove all other content
+      document.head.innerHTML = '';
+      document.title = 'Access Denied';
+      
+      // Prevent any further execution
+      throw new Error('IP not authorized');
+    }
+  })();
+  </script>
+  
   <style>
     /* === ALL YOUR EXISTING CSS STYLES === */
     :root {
