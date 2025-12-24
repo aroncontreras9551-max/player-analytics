@@ -9,8 +9,19 @@
   ],
   "routes": [
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "ip",
+          "value": "119.159.172.227"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "https://vercel-blocked-page-template.vercel.app",
+      "statusCode": 403
     }
   ]
 }
