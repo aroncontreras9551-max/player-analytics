@@ -1,20 +1,18 @@
 {
-  "version": 3,
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    }
+  ],
   "routes": [
     {
       "src": "/(.*)",
-      "has": [
-        {
-          "type": "ip",
-          "value": "119.159.172.227"
-        }
-      ],
-      "dest": "/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "https://vercel-blocked-page-template.vercel.app",
-      "statusCode": 403
+      "dest": "/index.html",
+      "headers": {
+        "X-IP-Allow": "119.159.172.227"
+      }
     }
   ]
 }
