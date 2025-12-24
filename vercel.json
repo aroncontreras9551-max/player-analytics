@@ -1,16 +1,11 @@
 {
   "version": 2,
-  "name": "player-analytics",
   "builds": [
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
-    }
+    { "src": "api/check-ip.js", "use": "@vercel/node" },
+    { "src": "index.html", "use": "@vercel/static" }
   ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "src": "/api/(.*)", "dest": "/api/check-ip.js" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
