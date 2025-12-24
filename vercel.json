@@ -1,26 +1,19 @@
 {
-  "version": 2,
-  "name": "player-analytics",
-  "builds": [
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
-    }
-  ],
+  "version": 3,
   "routes": [
     {
-      "source": "/(.*)",
+      "src": "/(.*)",
       "has": [
         {
           "type": "ip",
           "value": "119.159.172.227"
         }
       ],
-      "destination": "/index.html"
+      "dest": "/index.html"
     },
     {
-      "source": "/(.*)",
-      "destination": "https://vercel-blocked-page-template.vercel.app",
+      "src": "/(.*)",
+      "dest": "https://vercel-blocked-page-template.vercel.app",
       "statusCode": 403
     }
   ]
