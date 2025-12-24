@@ -1,8 +1,8 @@
 export default function handler(req, res) {
   // List your allowed IPs here
   const allowedIPs = [
-    '119.159.172.227', // Your IP
-    // Add more IPs: '203.0.113.45',
+    '119.159.172.227', 
+    '119.159.172.226
   ];
 
   // Get the user's IP address from the request
