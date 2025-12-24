@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "name": "player-analytics",
   "builds": [
     {
       "src": "index.html",
@@ -9,10 +10,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/index.html",
-      "headers": {
-        "X-IP-Allow": "119.159.172.2"
-      }
+      "dest": "/index.html"
     }
   ]
 }
